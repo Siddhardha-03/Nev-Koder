@@ -1,0 +1,152 @@
+.compiler-shell {
+  min-height: 100vh;
+  background: #eef1f7;
+  color: #243551;
+}
+
+.compiler-language-select {
+  min-width: 180px;
+  border: 1px solid #c9d6ec;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  color: #243551;
+}
+
+.compiler-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.compiler-btn {
+  border: 0;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compiler-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.compiler-btn-run {
+  background: linear-gradient(110deg, #b306de 0%, #cdc7cf 100%);
+  color: #ffffff;
+}
+
+.compiler-btn-clear {
+  background: rgba(240, 246, 255, 0.1);
+  border: 1px solid #7d95bc;
+  color: #eaf1ff;
+}
+
+.compiler-main {
+  display: grid;
+  grid-template-columns: 6fr 4fr;
+  gap: 0rem;
+  padding: 1rem;
+  min-height: calc(100vh - 150px);
+}
+
+.compiler-editor,
+.compiler-output {
+  background: #ffffff;
+  border: 1px solid #dfe4ed;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(16, 39, 79, 0.09);
+  overflow: hidden;
+}
+
+.compiler-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid #dfe4ed;
+  background: #f5f8fe;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.compiler-editor .monaco-container {
+  min-height: 300px;
+}
+
+.compiler-panel-header .compiler-btn-clear {
+  background: #eef3ff;
+  border: 1px solid #c9d6ec;
+  color: #223a63;
+}
+
+.compiler-output-body {
+  background: #f2f2f4;
+  color: #030303;
+  font-family: Consolas, 'Courier New', monospace;
+  padding: 0.8rem;
+  height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 0.86rem;
+}
+
+.compiler-output-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.7rem 0.8rem;
+  border-top: 1px solid #2d4264;
+  background: #1c304f;
+}
+
+.compiler-badge {
+  border: 1px solid #6f85ab;
+  color: #dce8ff;
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.76rem;
+}
+
+.compiler-stdin {
+  display: grid;
+
+  padding: 0.8rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.compiler-stdin textarea {
+  min-height: 90px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.65rem;
+  font-family: Consolas, 'Courier New', monospace;
+}
+
+@media (max-width: 1024px) {
+  .compiler-panel-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .compiler-panel-header .compiler-actions {
+    flex-wrap: wrap;
+  }
+
+  .compiler-main {
+    grid-template-columns: 1fr;
+  }
+
+  .compiler-editor .monaco-container {
+    min-height: 250px;
+  }
+
+  .compiler-output-body {
+    height: 250px;
+  }
+}
