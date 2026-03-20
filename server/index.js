@@ -7,6 +7,7 @@ import executeRoutes from './routes/execute.js';
 import questionRoutes from './routes/questions.js';
 import learningPathRoutes from './routes/learningPaths.js';
 import { corsMiddleware, errorHandler } from './middlewares/authMiddleware.js';
+import pool from './config/database.js';
 
 dotenv.config();
 
@@ -57,8 +58,21 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`📧 Make sure to configure email settings in .env file`);
-  console.log(`🔐 Make sure JWT_SECRET is set in .env file`);
-});
+const startServer = async () => {
+  try {
+    const connection = await pool.getConnection();
+    await connection.ping();
+    connection.release();
+    console.log('✅ DB connected');
+  } catch (error) {
+    console.error(`❌ DB connection failed: ${error.message}`);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`📧 Make sure to configure email settings in .env file`);
+    console.log(`🔐 Make sure JWT_SECRET is set in .env file`);
+  });
+};
+
+startServer();
