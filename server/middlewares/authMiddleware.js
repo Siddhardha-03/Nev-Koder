@@ -21,6 +21,44 @@ export const verifyToken = (req, res, next) => {
   }
 };
 
+// Optional auth middleware: attaches req.user when token is valid.
+export const verifyTokenOptional = (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return next();
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'Invalid authorization header format' });
+    }
+
+    const decoded = verifyAccessToken(token);
+    if (!decoded) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired token' });
+    }
+
+    req.user = decoded;
+    return next();
+  } catch (error) {
+    return res.status(401).json({ success: false, message: 'Token verification failed', error: error.message });
+  }
+};
+
+// Middleware to verify admin access
+export const requireAdmin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: 'Authentication required' });
+  }
+
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Admin access required' });
+  }
+
+  next();
+};
+
 // Rate limiting middleware
 export const rateLimitMiddleware = (maxRequests = 5, windowMs = 15 * 60 * 1000) => {
   const clients = new Map();

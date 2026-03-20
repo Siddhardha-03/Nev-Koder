@@ -10,6 +10,7 @@ function LandingNavbar() {
   const user = getStoredUser();
   const loggedInUserName = user?.name || user?.email || 'User';
   const isLoggedIn = isAuthenticated() && !!user;
+  const isAdmin = user?.role === 'admin';
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -36,10 +37,11 @@ function LandingNavbar() {
       </div>
       <nav className="menu-links" aria-label="Main navigation">
         <NavLink to="/">Home</NavLink>
-        <a href="#">Problems</a>
+        <NavLink to="/problems">Problems</NavLink>
         <a href="#">Assessments</a>
         <a href="#">Quizzes</a>
         <NavLink to="/compiler">Compiler</NavLink>
+        {isAdmin ? <NavLink to="/admin/dashboard">Admin</NavLink> : null}
         {!isLoggedIn && <NavLink to="/login">Sign In</NavLink>}
       </nav>
       <div className="menu-actions">
@@ -62,6 +64,11 @@ function LandingNavbar() {
                 <Link to="/dashboard" className="nav-dropdown-item" role="menuitem" onClick={() => setIsUserMenuOpen(false)}>
                   Dashboard
                 </Link>
+                {isAdmin ? (
+                  <Link to="/admin/dashboard" className="nav-dropdown-item" role="menuitem" onClick={() => setIsUserMenuOpen(false)}>
+                    Admin Panel
+                  </Link>
+                ) : null}
                 <button type="button" className="nav-dropdown-item nav-dropdown-logout" role="menuitem" onClick={handleLogout}>
                   Logout
                 </button>

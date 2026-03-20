@@ -1,0 +1,72 @@
+.problem-layout-shell {
+  display: flex;
+  gap: 0;
+  min-height: calc(100vh - 130px);
+}
+
+.problem-left-pane {
+  background: #fff;
+  border: 1px solid #dbe4f2;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: width 0.1s ease-out;
+}
+
+.problem-left-pane > div {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.problem-divider {
+  width: 6px;
+  background: linear-gradient(90deg, transparent, #c9d6ec, transparent);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.problem-divider:hover {
+  background: linear-gradient(90deg, transparent, #7d95bc, transparent);
+}
+
+.problem-divider:active {
+  background: linear-gradient(90deg, transparent, #3f51b5, transparent);
+}
+
+.problem-right-pane {
+  background: #fff;
+  border: 1px solid #dbe4f2;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
+  overflow: hidden;
+  flex-grow: 1;
+  flex-shrink: 0;
+  transition: width 0.1s ease-out;
+}
+
+@media (max-width: 1100px) {
+  .problem-layout-shell {
+    flex-direction: column;
+  }
+
+  .problem-left-pane {
+    width: 100% !important;
+    min-height: auto;
+    max-height: 50vh;
+  }
+
+  .problem-divider {
+    width: 100%;
+    height: 4px;
+    cursor: row-resize;
+    background: linear-gradient(180deg, transparent, #c9d6ec, transparent);
+  }
+
+  .problem-right-pane {
+    width: 100% !important;
+    min-height: 520px;
+  }
+}

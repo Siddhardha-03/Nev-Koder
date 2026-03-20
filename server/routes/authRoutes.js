@@ -6,7 +6,8 @@ import {
   login,
   forgotPassword,
   resetPassword,
-  refreshAccessToken
+  refreshAccessToken,
+  getDashboardStats
 } from '../controllers/authController.js';
 import { verifyToken, rateLimitMiddleware } from '../middlewares/authMiddleware.js';
 
@@ -28,6 +29,7 @@ router.post('/login', loginRateLimit, login);
 router.post('/forgot-password', forgotPasswordRateLimit, forgotPassword);
 router.post('/reset-password', resetPasswordRateLimit, resetPassword);
 router.post('/refresh-token', refreshAccessToken);
+router.get('/dashboard/stats', verifyToken, getDashboardStats);
 
 // Protected route example
 router.get('/me', verifyToken, (req, res) => {

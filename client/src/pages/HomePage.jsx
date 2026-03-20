@@ -15,7 +15,10 @@ import { Link } from 'react-router-dom'
 import LandingNavbar from '../components/LandingNavbar'
 import compilerIcon from '../assets/compiler_icon.png'
 import heroImg from '../assets/hero.png'
+import interviewPrepIcon from '../assets/Interview_prep.png'
+import learningPathIcon from '../assets/learing path icon.png'
 import mockAssessmentIcon from '../assets/mock_assesment_icon.png'
+import practiceSheetIcon from '../assets/practice_sheet_icon.png'
 import quizIcon from '../assets/quiz_icon.png'
 import solveChallengesIcon from '../assets/solve_challenges.png'
 import '../App.css'
@@ -27,53 +30,62 @@ function HomePage() {
       desc: 'Sharpen your skills with a wide range of coding problems.',
       icon: Braces,
       image: solveChallengesIcon,
+      route: '/problems',
     },
     {
       title: 'Online Code Compiler',
       desc: 'Write, run, and debug code in our online editor.',
       icon: Code2,
       image: compilerIcon,
+      route: '/compiler',
     },
     {
       title: 'Mock Assessments',
       desc: 'Take timed tests to prepare for real interviews.',
       icon: TimerReset,
       image: mockAssessmentIcon,
+      route: '/interview-prep',
     },
     {
       title: 'Fun Quizzes',
       desc: 'Test your knowledge with interactive quizzes.',
       icon: HelpCircle,
       image: quizIcon,
+      route: '/practice-sheets',
     },
   ]
 
   const challenges = [
     {
-      title: 'Binary Search',
-      tag: 'Algorithms',
-      difficulty: 'Medium',
-      info: 'Write, run, and debug search logic efficiently.',
+      title: 'Learning Path',
+      tag: 'Guided roadmap',
+      info: 'Follow a structured progression from fundamentals to advanced coding topics.',
+      image: learningPathIcon,
+      route: '/learning-paths',
+      sideText: 'Master the Fundamentals',
     },
     {
-      title: 'Tree Traversal',
-      tag: 'Data Structures',
-      difficulty: 'Easy',
-      info: 'Practice traversing binary trees with confidence.',
+      title: 'Practice Sheets',
+      tag: 'Topic-wise drills',
+      info: 'Build speed and accuracy with curated problem sets across key concepts.',
+      image: practiceSheetIcon,
+      route: '/practice-sheets',
+      sideText: 'Sharpen Your Skills',
     },
     {
-      title: 'String Anagrams',
-      tag: 'Strings',
-      difficulty: 'Hard',
-      info: 'Find all anagram pairs in a string with optimized logic.',
+      title: 'Interview Prep',
+      tag: 'Company-style prep',
+      info: 'Practice interview-focused questions and get ready for real hiring rounds.',
+      image: interviewPrepIcon,
+      route: '/interview-prep',
+      sideText: 'Land Your Dream Job',
     },
   ]
 
   return (
     <main className="landing-page">
-      <LandingNavbar />
-
       <section className="hero-section" style={{ backgroundImage: `url(${heroImg})` }}>
+        <LandingNavbar />
         <div className="hero-copy">
           <h1>Level Up Your Coding Skills</h1>
           <p className="subtitle">Practice, Compete, and Succeed.</p>
@@ -92,7 +104,7 @@ function HomePage() {
         {featureCards.map((item) => {
           const Icon = item.icon
           return (
-            <article className="feature-card" key={item.title}>
+            <Link to={item.route} className="feature-card" key={item.title}>
               <div className="feature-head">
                 <span className="feature-art-wrap" aria-hidden="true">
                   <img src={item.image} alt="" className="feature-art" />
@@ -103,7 +115,7 @@ function HomePage() {
                 <h3>{item.title}</h3>
               </div>
               <p>{item.desc}</p>
-            </article>
+            </Link>
           )
         })}
       </section>
@@ -112,22 +124,26 @@ function HomePage() {
         <div className="section-head">
           <h2>
             <Sparkles size={20} aria-hidden="true" />
-            Featured Challenges
+            Career Tracks
           </h2>
         </div>
-        <div className="challenge-grid">
-          {challenges.map((challenge) => (
-            <article className="challenge-card" key={challenge.title}>
-              <h3>{challenge.title}</h3>
-              <p className="challenge-tag">{challenge.tag}</p>
-              <p className={`difficulty difficulty-${challenge.difficulty.toLowerCase()}`}>
-                Difficulty: <span>{challenge.difficulty}</span>
-              </p>
-              <p className="challenge-info">{challenge.info}</p>
-              <Link to="/login" className="btn btn-primary small">
-                Solve Now
-              </Link>
-            </article>
+        <div className="challenge-tracks-container">
+          {challenges.map((challenge, index) => (
+            <Link
+              to={challenge.route}
+              key={challenge.title}
+              className={`career-track-row ${index % 2 === 0 ? 'left-image' : 'right-image'}`}
+            >
+              <div className="track-image-side">
+                <img src={challenge.image} alt={challenge.title} className="track-image" />
+              </div>
+              <div className="track-content-side">
+                <h3>{challenge.title}</h3>
+                <p className="track-tag">{challenge.tag}</p>
+                <p className="track-info">{challenge.info}</p>
+                <span className="track-cta">Explore Now → </span>
+              </div>
+            </Link>
           ))}
         </div>
       </section>

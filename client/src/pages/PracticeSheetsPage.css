@@ -1,0 +1,198 @@
+.practice-shell {
+  min-height: calc(100vh - 50px);
+  background: #eef1f7;
+  padding: 1.25rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.practice-header {
+  background: white;
+  color: #0e0e0e;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(16, 39, 79, 0.22);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.practice-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.practice-header p {
+  margin: 0.35rem 0 0;
+  color: #5b6f8d;
+  font-size: 1rem;
+}
+
+.practice-sheets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.practice-sheet-card {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
+  border: 1px solid #dbe4f2;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.practice-sheet-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 40px rgba(17, 42, 86, 0.15);
+}
+
+.sheet-header {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sheet-icon {
+  font-size: 2rem;
+  color: white;
+}
+
+.sheet-difficulty {
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+.sheet-difficulty-easy {
+  background: rgba(34, 197, 94, 0.3);
+}
+
+.sheet-difficulty-medium {
+  background: rgba(251, 146, 60, 0.3);
+}
+
+.sheet-difficulty-hard {
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.sheet-content {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet-content h3 {
+  margin: 0 0 0.5rem;
+  color: #1f3a5f;
+  font-size: 1.1rem;
+}
+
+.sheet-description {
+  margin: 0 0 1rem;
+  color: #5b6f8d;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.sheet-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+  padding: 1rem;
+  background: #f8fafd;
+  border-radius: 10px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #5b6f8d;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  margin-bottom: 0.35rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f3a5f;
+}
+
+.stat-solved {
+  color: #059669;
+}
+
+.sheet-progress {
+  margin-bottom: 1rem;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: #5b6f8d;
+  font-weight: 600;
+}
+
+.progress-percent {
+  color: #1f3a5f;
+  font-weight: 700;
+}
+
+.progress-bar {
+  background: #ffe6f0;
+  border-radius: 999px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.sheet-btn {
+  background: linear-gradient(110deg, #f5576c 0%, #f093fb 100%);
+  color: white;
+  border: 0;
+  border-radius: 10px;
+  padding: 0.8rem 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sheet-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(245, 87, 108, 0.4);
+}
+
+.sheet-btn:active {
+  transform: translateY(0);
+}

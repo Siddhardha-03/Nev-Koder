@@ -89,8 +89,8 @@ export const register = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
     // Create user
-    const insertQuery = 'INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)';
-    const [result] = await connection.execute(insertQuery, [name, email, passwordHash]);
+    const insertQuery = 'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)';
+    const [result] = await connection.execute(insertQuery, [name, email, passwordHash, 'user']);
 
     const userId = result.insertId;
 
@@ -170,7 +170,7 @@ export const verifyOTPCode = async (req, res) => {
     await sendWelcomeEmail(user.email, user.name);
 
     // Generate tokens
-    const accessToken = generateAccessToken(userId, user.email);
+    const accessToken = generateAccessToken(userId, user.email, user.role || 'user');
     const refreshToken = generateRefreshToken(userId);
 
     res.cookie('refreshToken', refreshToken, {
@@ -187,7 +187,8 @@ export const verifyOTPCode = async (req, res) => {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role || 'user'
       }
     });
   } catch (error) {
@@ -318,7 +319,7 @@ export const login = async (req, res) => {
     connection.release();
 
     // Generate tokens
-    const accessToken = generateAccessToken(user.id, user.email);
+    const accessToken = generateAccessToken(user.id, user.email, user.role || 'user');
     const refreshToken = generateRefreshToken(user.id);
 
     // Save refresh token in database
@@ -346,7 +347,8 @@ export const login = async (req, res) => {
       user: {
         id: user.id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role || 'user'
       }
     });
   } catch (error) {
@@ -502,7 +504,7 @@ export const refreshAccessToken = async (req, res) => {
     const user = users[0];
 
     // Generate new access token
-    const newAccessToken = generateAccessToken(user.id, user.email);
+    const newAccessToken = generateAccessToken(user.id, user.email, user.role || 'user');
 
     res.status(200).json({
       success: true,
@@ -511,5 +513,97 @@ export const refreshAccessToken = async (req, res) => {
   } catch (error) {
     console.error('Refresh token error:', error);
     res.status(500).json({ success: false, message: 'Token refresh failed', error: error.message });
+  }
+};
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+      const [solvedCountRows] = await connection.execute(
+        `SELECT COUNT(*) AS solved_count
+         FROM user_solved_questions
+         WHERE user_id = ?`,
+        [userId]
+      );
+
+      const [dailySolvedRows] = await connection.execute(
+        `SELECT DATE(solved_at) AS solved_day
+         FROM user_solved_questions
+         WHERE user_id = ?
+         GROUP BY DATE(solved_at)
+         ORDER BY solved_day DESC`,
+        [userId]
+      );
+
+      const [difficultyBreakdownRows] = await connection.execute(
+        `SELECT q.difficulty, COUNT(*) AS count
+         FROM user_solved_questions usq
+         JOIN questions q ON usq.question_id = q.id
+         WHERE usq.user_id = ?
+         GROUP BY q.difficulty`,
+        [userId]
+      );
+
+      let dayStreak = 0;
+      if (dailySolvedRows.length > 0) {
+        const solvedDays = dailySolvedRows.map((row) => new Date(row.solved_day));
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const latestDay = new Date(solvedDays[0]);
+        latestDay.setHours(0, 0, 0, 0);
+
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const daysFromToday = Math.round((today.getTime() - latestDay.getTime()) / msPerDay);
+
+        if (daysFromToday <= 1) {
+          let expected = new Date(latestDay);
+
+          for (const solvedDayRaw of solvedDays) {
+            const solvedDay = new Date(solvedDayRaw);
+            solvedDay.setHours(0, 0, 0, 0);
+
+            if (solvedDay.getTime() === expected.getTime()) {
+              dayStreak++;
+              expected = new Date(expected.getTime() - msPerDay);
+            } else if (solvedDay.getTime() < expected.getTime()) {
+              break;
+            }
+          }
+        }
+      }
+
+      // Build difficulty breakdown
+      const difficultyStats = {
+        Easy: 0,
+        Medium: 0,
+        Hard: 0
+      };
+
+      for (const row of difficultyBreakdownRows) {
+        difficultyStats[row.difficulty] = Number(row.count);
+      }
+
+      return res.json({
+        success: true,
+        stats: {
+          solvedQuestions: Number(solvedCountRows[0]?.solved_count || 0),
+          dayStreak,
+          easyCount: difficultyStats.Easy,
+          mediumCount: difficultyStats.Medium,
+          hardCount: difficultyStats.Hard
+        }
+      });
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to load dashboard stats', error: error.message });
   }
 };

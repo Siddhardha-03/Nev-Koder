@@ -1,6 +1,6 @@
 .compiler-shell {
   min-height: 100vh;
-  background: #eef1f7;
+  background: #ffffff;
   color: #243551;
 }
 
@@ -56,7 +56,7 @@
 
 .compiler-editor,
 .compiler-output {
-  background: #ffffff;
+  background: #f4f1f1;
   border: 1px solid #dfe4ed;
   border-radius: 14px;
   box-shadow: 0 10px 28px rgba(16, 39, 79, 0.09);
@@ -76,6 +76,17 @@
 
 .compiler-editor .monaco-container {
   min-height: 300px;
+}
+
+.compiler-editor .compiler-btn {
+  padding: 0.42rem 0.7rem;
+  font-size: 0.82rem;
+}
+
+.compiler-editor .compiler-language-select {
+  min-width: 150px;
+  padding: 0.38rem 0.55rem;
+  font-size: 0.82rem;
 }
 
 .compiler-panel-header .compiler-btn-clear {
@@ -101,15 +112,29 @@
   gap: 0.4rem;
   padding: 0.7rem 0.8rem;
   border-top: 1px solid #2d4264;
-  background: #1c304f;
+  background: #efefef;
 }
 
 .compiler-badge {
   border: 1px solid #6f85ab;
-  color: #dce8ff;
+  color: #1b1b1c;
   border-radius: 999px;
   padding: 0.22rem 0.6rem;
   font-size: 0.76rem;
+}
+
+.compiler-badge.badge-passed {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  font-weight: 600;
+}
+
+.compiler-badge.badge-failed {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  font-weight: 600;
 }
 
 .compiler-stdin {
@@ -125,6 +150,218 @@
   border-radius: 10px;
   padding: 0.65rem;
   font-family: Consolas, 'Courier New', monospace;
+}
+
+/* Output Tabs Styles */
+.compiler-output-tabs {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.compiler-tab {
+  background: transparent;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  color: #7d95bc;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.compiler-tab:hover {
+  color: #243551;
+}
+
+.compiler-tab.active {
+  color: #b306de;
+  border-bottom-color: #b306de;
+}
+
+/* Submit Button Styles */
+.compiler-btn-submit {
+  background: linear-gradient(110deg, #1e40af 0%, #2563eb 100%);
+  color: #ffffff;
+}
+
+.compiler-btn-submit:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+/* Test Results Container */
+.compiler-results-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.compiler-results-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.8rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f5f8fe 0%, #eef1f7 100%);
+  border-bottom: 1px solid #dfe4ed;
+}
+
+.results-stat {
+  background: #ffffff;
+  border: 1px solid #dfe4ed;
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(16, 39, 79, 0.04);
+}
+
+.results-stat.success {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.results-stat.failure {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.results-stat-label {
+  font-size: 0.8rem;
+  color: #7d95bc;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+}
+
+.results-stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #243551;
+}
+
+.results-stat.success .results-stat-value {
+  color: #10b981;
+}
+
+.results-stat.failure .results-stat-value {
+  color: #ef4444;
+}
+
+/* Test Cases Display */
+.compiler-test-cases {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.test-case-result {
+  border: 1px solid #dfe4ed;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.test-case-result.passed {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.02);
+}
+
+.test-case-result.failed {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.02);
+}
+
+.test-case-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem;
+  background: #f5f8fe;
+  border-bottom: 1px solid #dfe4ed;
+}
+
+.test-case-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 600;
+  color: #243551;
+}
+
+.icon-success {
+  color: #10b981;
+}
+
+.icon-failure {
+  color: #ef4444;
+}
+
+.test-case-meta {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: #eef1f7;
+  color: #3f51b5;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.badge-status {
+  background: linear-gradient(110deg, #b306de 0%, #cdc7cf 100%);
+  color: #ffffff;
+}
+
+.test-case-output {
+  padding: 0.8rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.test-case-output:last-child {
+  border-bottom: none;
+}
+
+.test-case-output.error-section {
+  background: rgba(239, 68, 68, 0.05);
+  border-bottom: none;
+  padding: 1rem;
+}
+
+.output-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #7d95bc;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.test-case-output pre {
+  margin: 0;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #030303;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f2f2f4;
+  padding: 0.6rem;
+  border-radius: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.error-section pre {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fee2e2;
 }
 
 @media (max-width: 1024px) {
@@ -148,5 +385,43 @@
 
   .compiler-output-body {
     height: 250px;
+  }
+
+  .compiler-results-summary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    padding: 0.8rem;
+  }
+
+  .results-stat {
+    padding: 0.8rem;
+  }
+
+  .results-stat-label {
+    font-size: 0.7rem;
+  }
+
+  .results-stat-value {
+    font-size: 1.4rem;
+  }
+
+  .compiler-test-cases {
+    padding: 0.8rem;
+    gap: 0.8rem;
+  }
+
+  .test-case-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .test-case-meta {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .test-case-output pre {
+    max-height: 100px;
   }
 }

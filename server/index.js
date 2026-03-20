@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js';
 import executeRoutes from './routes/execute.js';
+import questionRoutes from './routes/questions.js';
+import learningPathRoutes from './routes/learningPaths.js';
 import { corsMiddleware, errorHandler } from './middlewares/authMiddleware.js';
 
 dotenv.config();
@@ -31,6 +33,9 @@ app.get('/', (req, res) => {
       health: '/health',
       authBase: '/api/auth',
       execute: '/api/execute',
+      executePreview: '/api/execute/preview',
+      questions: '/api/questions',
+      publicQuestions: '/api/questions/public',
       register: '/api/auth/register',
       login: '/api/auth/login'
     }
@@ -40,6 +45,8 @@ app.get('/', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/execute', executeRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/learning-paths', learningPathRoutes);
 
 // 404 handler
 app.use((req, res) => {
