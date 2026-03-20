@@ -94,7 +94,23 @@ export const corsMiddleware = (req, res, next) => {
     .filter(Boolean);
   const origin = req.headers.origin;
 
-  if (allowedOrigins.includes(origin)) {
+  const isWildcardMatch = (value, pattern) => {
+    if (!pattern.includes('*')) return value === pattern;
+
+    const escaped = pattern
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*/g, '.*');
+
+    return new RegExp(`^${escaped}$`).test(value);
+  };
+
+  const isTrustedRenderOrigin = (value) => /^https:\/\/[a-z0-9-]+\.onrender\.com$/i.test(value);
+
+  const isAllowedOrigin = origin
+    ? allowedOrigins.some((allowedOrigin) => isWildcardMatch(origin, allowedOrigin)) || isTrustedRenderOrigin(origin)
+    : false;
+
+  if (isAllowedOrigin) {
     res.header('Access-Control-Allow-Origin', origin);
   }
 
