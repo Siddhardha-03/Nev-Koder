@@ -108,6 +108,8 @@
   color: #314a73;
   font-size: 0.85rem;
   line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .problem-example-list {
@@ -152,6 +154,9 @@
   font-family: Consolas, 'Courier New', monospace;
   color: #333;
   border: 1px solid #ddd;
+  white-space: pre-wrap;
+  display: inline-block;
+  vertical-align: top;
 }
 
 .problem-code-block strong {

@@ -37,7 +37,7 @@ function QuestionForm({
 }) {
   const [formData, setFormData] = useState(createDefaultForm());
   const [error, setError] = useState('');
-  const [hasBoilerplateTouched, setHasBoilerplateTouched] = useState(false);
+  const [boilerplateDecisionMade, setBoilerplateDecisionMade] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -52,27 +52,16 @@ function QuestionForm({
         testCases: Array.isArray(question.testCases) && question.testCases.length > 0 ? question.testCases : [{ input: '', expected_output: '', hidden: false }],
         has_boilerplate: Boolean(question.has_boilerplate)
       });
+      setBoilerplateDecisionMade(true);
     } else {
       setFormData(createDefaultForm());
+      setBoilerplateDecisionMade(false);
     }
 
-    setHasBoilerplateTouched(false);
     setError('');
   }, [open, question]);
 
   const tagInput = useMemo(() => (formData.tags?.tags || []).join(', '), [formData.tags]);
-
-  useEffect(() => {
-    if (hasBoilerplateTouched) return;
-
-    const tags = (formData.tags?.tags || []).map((tag) => String(tag).trim().toLowerCase());
-    const isBeginnerEasy = formData.difficulty === 'Easy' && tags.includes('beginner');
-
-    setFormData((prev) => ({
-      ...prev,
-      has_boilerplate: !isBeginnerEasy
-    }));
-  }, [formData.difficulty, formData.tags, hasBoilerplateTouched]);
 
   if (!open) return null;
 
@@ -175,13 +164,17 @@ function QuestionForm({
   };
 
   const validate = () => {
+    if (!boilerplateDecisionMade) return 'Please choose whether this question needs boilerplate.';
     if (!formData.title.trim()) return 'Question title is required.';
     if (!formData.description.trim()) return 'Question description is required.';
     if (!formData.difficulty) return 'Difficulty is required.';
-    if (!formData.parameter_schema?.returnType) return 'Return type is required.';
+    if (formData.has_boilerplate) {
+      if (!formData.function_name.trim()) return 'Function name is required when boilerplate is enabled.';
+      if (!formData.parameter_schema?.returnType) return 'Return type is required when boilerplate is enabled.';
 
-    const invalidParams = (formData.parameter_schema?.params || []).some((p) => !p.name?.trim() || !p.type?.trim());
-    if (invalidParams) return 'Each parameter must include name and type.';
+      const invalidParams = (formData.parameter_schema?.params || []).some((p) => !p.name?.trim() || !p.type?.trim());
+      if (invalidParams) return 'Each parameter must include name and type.';
+    }
 
     const invalidTests = (formData.testCases || []).some((tc) => !tc.input?.trim() || !tc.expected_output?.trim());
     if (invalidTests) return 'Each test case needs input and expected output.';
@@ -216,16 +209,52 @@ function QuestionForm({
         <form className="admin-modal-content" onSubmit={submit}>
           {error ? <div className="admin-error">{error}</div> : null}
 
-          <div className="admin-form-grid">
+          <div className="admin-choice-card">
+            <p className="admin-choice-title">Step 1: Does this question need boilerplate?</p>
+            <div className="admin-choice-actions">
+              <button
+                type="button"
+                className={`admin-btn ${boilerplateDecisionMade && formData.has_boilerplate ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
+                onClick={() => {
+                  setBoilerplateDecisionMade(true);
+                  setFormData((prev) => ({ ...prev, has_boilerplate: true }));
+                }}
+              >
+                Yes, use boilerplate
+              </button>
+              <button
+                type="button"
+                className={`admin-btn ${boilerplateDecisionMade && !formData.has_boilerplate ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
+                onClick={() => {
+                  setBoilerplateDecisionMade(true);
+                  setFormData((prev) => ({ ...prev, has_boilerplate: false }));
+                }}
+              >
+                No, full program I/O
+              </button>
+            </div>
+            <p className="admin-helper">
+              {boilerplateDecisionMade
+                ? formData.has_boilerplate
+                  ? 'Function name, parameters, and return type will be required.'
+                  : 'Function signature fields are optional and hidden. Use clear description/examples/test cases.'
+                : 'Select one option to continue to the remaining fields.'}
+            </p>
+          </div>
+
+          {boilerplateDecisionMade ? (
+            <div className="admin-form-grid">
             <div className="admin-form-group admin-form-group-full">
               <label className="admin-label">Question Title</label>
               <input className="admin-input" name="title" value={formData.title} onChange={handleBasicInput} />
             </div>
 
-            <div className="admin-form-group">
-              <label className="admin-label">Function Name</label>
-              <input className="admin-input" name="function_name" value={formData.function_name} onChange={handleBasicInput} placeholder="twoSum" />
-            </div>
+            {formData.has_boilerplate ? (
+              <div className="admin-form-group">
+                <label className="admin-label">Function Name</label>
+                <input className="admin-input" name="function_name" value={formData.function_name} onChange={handleBasicInput} placeholder="twoSum" />
+              </div>
+            ) : null}
 
             <div className="admin-form-group">
               <label className="admin-label">Difficulty</label>
@@ -254,62 +283,48 @@ function QuestionForm({
               <textarea className="admin-textarea" rows={7} name="description" value={formData.description} onChange={handleBasicInput} />
             </div>
 
-            <div className="admin-form-group">
-              <label className="admin-label">Return Type</label>
-              <select
-                className="admin-select"
-                value={formData.parameter_schema?.returnType || ''}
-                onChange={(event) => setFormData((prev) => ({
-                  ...prev,
-                  parameter_schema: {
-                    returnType: event.target.value,
-                    params: prev.parameter_schema?.params || [{ name: '', type: '' }]
-                  }
-                }))}
-              >
-                <option value="">Select Return Type</option>
-                {TYPE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
-              </select>
-            </div>
+            {formData.has_boilerplate ? (
+              <>
+                <div className="admin-form-group">
+                  <label className="admin-label">Return Type</label>
+                  <select
+                    className="admin-select"
+                    value={formData.parameter_schema?.returnType || ''}
+                    onChange={(event) => setFormData((prev) => ({
+                      ...prev,
+                      parameter_schema: {
+                        returnType: event.target.value,
+                        params: prev.parameter_schema?.params || [{ name: '', type: '' }]
+                      }
+                    }))}
+                  >
+                    <option value="">Select Return Type</option>
+                    {TYPE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                </div>
 
-            <div className="admin-form-group">
-              <label className="admin-label">Boilerplate Mode</label>
-              <label className="admin-switch">
-                <input
-                  type="checkbox"
-                  checked={Boolean(formData.has_boilerplate)}
-                  onChange={(event) => {
-                    setHasBoilerplateTouched(true);
-                    setFormData((prev) => ({ ...prev, has_boilerplate: event.target.checked }));
-                  }}
-                />
-                Enable Boilerplate Code
-              </label>
-              {formData.difficulty === 'Easy' ? (
-                <p className="admin-helper">Disable this for beginner-friendly problems where users write full program I/O.</p>
-              ) : null}
-            </div>
-
-            <div className="admin-form-group admin-form-group-full">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label className="admin-label">Function Parameters</label>
-                <button type="button" className="admin-btn admin-btn-secondary" onClick={addParam}>Add Parameter</button>
-              </div>
-              <div className="admin-mini-list">
-                {(formData.parameter_schema?.params || []).map((param, index) => (
-                  <div className="admin-mini-item" key={`param-${index}`}>
-                    <div className="admin-inline-grid">
-                      <input className="admin-input" value={param.name || ''} onChange={(e) => updateParam(index, 'name', e.target.value)} placeholder="name" />
-                      <select className="admin-select" value={param.type || ''} onChange={(e) => updateParam(index, 'type', e.target.value)}>
-                        <option value="">Type</option>
-                        {TYPE_OPTIONS.map((option) => <option key={`${option}-${index}`} value={option}>{option}</option>)}
-                      </select>
-                      <button type="button" className="admin-btn admin-btn-danger" onClick={() => removeParam(index)}>Remove</button>
-                    </div>
+                <div className="admin-form-group admin-form-group-full">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label className="admin-label">Function Parameters</label>
+                    <button type="button" className="admin-btn admin-btn-secondary" onClick={addParam}>Add Parameter</button>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <div className="admin-mini-list">
+                    {(formData.parameter_schema?.params || []).map((param, index) => (
+                      <div className="admin-mini-item" key={`param-${index}`}>
+                        <div className="admin-inline-grid">
+                          <input className="admin-input" value={param.name || ''} onChange={(e) => updateParam(index, 'name', e.target.value)} placeholder="name" />
+                          <select className="admin-select" value={param.type || ''} onChange={(e) => updateParam(index, 'type', e.target.value)}>
+                            <option value="">Type</option>
+                            {TYPE_OPTIONS.map((option) => <option key={`${option}-${index}`} value={option}>{option}</option>)}
+                          </select>
+                          <button type="button" className="admin-btn admin-btn-danger" onClick={() => removeParam(index)}>Remove</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : null}
 
             <div className="admin-form-group admin-form-group-full">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -355,7 +370,8 @@ function QuestionForm({
                 ))}
               </div>
             </div>
-          </div>
+            </div>
+          ) : null}
 
           <div className="admin-modal-footer">
             <button type="button" className="admin-btn admin-btn-secondary" onClick={onClose}>Cancel</button>
