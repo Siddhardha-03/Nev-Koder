@@ -50,16 +50,6 @@ const lockAccount = async (userId) => {
   }
 };
 
-const rollbackRegistrationForUser = async (userId) => {
-  const cleanupConnection = await pool.getConnection();
-  try {
-    await cleanupConnection.execute('DELETE FROM otp_codes WHERE user_id = ?', [userId]);
-    await cleanupConnection.execute('DELETE FROM users WHERE id = ?', [userId]);
-  } finally {
-    cleanupConnection.release();
-  }
-};
-
 // Register user
 export const register = async (req, res) => {
   try {
@@ -120,12 +110,8 @@ export const register = async (req, res) => {
     connection.release();
 
     if (!emailResult.success) {
-      console.warn('Failed to send OTP email during registration:', emailResult.error);
-      await rollbackRegistrationForUser(userId);
-      return res.status(503).json({
-        success: false,
-        message: 'Unable to send verification email right now. Please try again in a few minutes.'
-      });
+      console.warn('Failed to send OTP email:', emailResult.error);
+      // Continue anyway, user can request resend
     }
 
     res.status(201).json({

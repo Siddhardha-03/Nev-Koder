@@ -8,17 +8,11 @@ import questionRoutes from './routes/questions.js';
 import learningPathRoutes from './routes/learningPaths.js';
 import { corsMiddleware, errorHandler } from './middlewares/authMiddleware.js';
 import pool from './config/database.js';
-import { getEmailConfigStatus, verifyEmailTransport } from './services/emailService.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Required on Render/behind proxies so req.ip and secure cookies behave correctly.
-if (process.env.NODE_ENV === 'production') {
-  app.set('trust proxy', 1);
-}
 
 // Middleware
 app.use(express.json());
@@ -31,41 +25,6 @@ app.get('/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
 });
 
-// API-prefixed alias for environments that route only /api paths.
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'Server is running' });
-});
-
-app.get('/health/email', async (req, res) => {
-  const configStatus = getEmailConfigStatus();
-  const verification = await verifyEmailTransport();
-
-  const payload = {
-    success: verification.success,
-    configured: configStatus.configured,
-    missing: configStatus.missing,
-    reason: verification.reason,
-    message: verification.message
-  };
-
-  return res.status(verification.success ? 200 : 503).json(payload);
-});
-
-app.get('/api/health/email', async (req, res) => {
-  const configStatus = getEmailConfigStatus();
-  const verification = await verifyEmailTransport();
-
-  const payload = {
-    success: verification.success,
-    configured: configStatus.configured,
-    missing: configStatus.missing,
-    reason: verification.reason,
-    message: verification.message
-  };
-
-  return res.status(verification.success ? 200 : 503).json(payload);
-});
-
 // Root endpoint for quick API discovery
 app.get('/', (req, res) => {
   res.json({
@@ -73,9 +32,6 @@ app.get('/', (req, res) => {
     message: 'nev-koder auth API is running',
     endpoints: {
       health: '/health',
-      apiHealth: '/api/health',
-      emailHealth: '/health/email',
-      apiEmailHealth: '/api/health/email',
       authBase: '/api/auth',
       execute: '/api/execute',
       executePreview: '/api/execute/preview',
@@ -117,25 +73,6 @@ const startServer = async () => {
     console.log(`📧 Make sure to configure email settings in .env file`);
     console.log(`🔐 Make sure JWT_SECRET is set in .env file`);
   });
-
-  const emailStatus = getEmailConfigStatus();
-  if (emailStatus.configured) {
-    console.log('✅ Email service configured');
-  } else {
-    console.warn(`⚠️ Email service missing env: ${emailStatus.missing.join(', ')}`);
-  }
-
-  verifyEmailTransport()
-    .then((emailVerification) => {
-      if (emailVerification.success) {
-        console.log('✅ Email SMTP verified');
-      } else {
-        console.warn(`⚠️ Email SMTP check failed (${emailVerification.reason}): ${emailVerification.message}`);
-      }
-    })
-    .catch((error) => {
-      console.warn(`⚠️ Email SMTP check failed unexpectedly: ${error.message}`);
-    });
 };
 
 startServer();
