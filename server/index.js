@@ -31,7 +31,27 @@ app.get('/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
 });
 
+// API-prefixed alias for environments that route only /api paths.
+app.get('/api/health', (req, res) => {
+  res.json({ success: true, message: 'Server is running' });
+});
+
 app.get('/health/email', async (req, res) => {
+  const configStatus = getEmailConfigStatus();
+  const verification = await verifyEmailTransport();
+
+  const payload = {
+    success: verification.success,
+    configured: configStatus.configured,
+    missing: configStatus.missing,
+    reason: verification.reason,
+    message: verification.message
+  };
+
+  return res.status(verification.success ? 200 : 503).json(payload);
+});
+
+app.get('/api/health/email', async (req, res) => {
   const configStatus = getEmailConfigStatus();
   const verification = await verifyEmailTransport();
 
@@ -53,7 +73,9 @@ app.get('/', (req, res) => {
     message: 'nev-koder auth API is running',
     endpoints: {
       health: '/health',
+      apiHealth: '/api/health',
       emailHealth: '/health/email',
+      apiEmailHealth: '/api/health/email',
       authBase: '/api/auth',
       execute: '/api/execute',
       executePreview: '/api/execute/preview',
