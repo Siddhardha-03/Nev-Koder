@@ -2,6 +2,8 @@ import express from 'express';
 import pool from '../config/database.js';
 import { verifyToken, verifyTokenOptional, requireAdmin } from '../middlewares/authMiddleware.js';
 import { generateScaffolds } from '../utils/scaffoldGenerator.js';
+import { parseBoilerplateTemplate, parseNoBoilerplateTemplate } from '../services/bulkQuestionService.js';
+import XLSX from 'xlsx';
 
 const router = express.Router();
 
@@ -384,6 +386,301 @@ router.delete('/:id', verifyToken, requireAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to delete question', error: error.message });
   } finally {
     connection.release();
+  }
+});
+
+// Download boilerplate template
+router.get('/templates/boilerplate', verifyToken, requireAdmin, (req, res) => {
+  try {
+    const templateData = [
+      {
+        'Title': 'Two Sum',
+        'Function Name': 'twoSum',
+        'Difficulty': 'Easy',
+        'Question Type': 'array',
+        'Tags': 'array, hash-table, two-pointer',
+        'Return Type': 'List[int]',
+        'Param 1 Name': 'nums',
+        'Param 1 Type': 'List[int]',
+        'Param 2 Name': 'target',
+        'Param 2 Type': 'int',
+        'Description': 'Given an array of integers nums and an integer target, return the indices of the two numbers that add up to target. You may assume that each input has exactly one solution, and you may not use the same element twice.',
+        'Examples': JSON.stringify([
+          {
+            input: 'nums = [2,7,11,15], target = 9',
+            output: '[0,1]',
+            explanation: 'The sum of 2 and 7 is 9. Therefore, index0 = 0, index1 = 1. We return [0, 1].'
+          }
+        ]),
+        'Test Cases': JSON.stringify([
+          {
+            input: '[2,7,11,15]\n9',
+            expected_output: '[0,1]',
+            hidden: false
+          }
+        ])
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    worksheet['!cols'] = [
+      { wch: 20 },
+      { wch: 20 },
+      { wch: 12 },
+      { wch: 18 },
+      { wch: 30 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 15 },
+      { wch: 40 },
+      { wch: 50 },
+      { wch: 50 }
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="boilerplate_template.xlsx"');
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to generate template', error: error.message });
+  }
+});
+
+// Download no-boilerplate template
+router.get('/templates/no-boilerplate', verifyToken, requireAdmin, (req, res) => {
+  try {
+    const templateData = [
+      {
+        'Title': 'Simple Math Problem',
+        'Difficulty': 'Easy',
+        'Question Type': 'math',
+        'Tags': 'math, primitives',
+        'Description': 'Write a program that reads two integers and outputs their sum and product.',
+        'Examples': JSON.stringify([
+          {
+            input: '5\n3',
+            output: '8\n15',
+            explanation: 'Sum of 5 and 3 is 8, product is 15.'
+          }
+        ]),
+        'Test Cases': JSON.stringify([
+          {
+            input: '5\n3',
+            expected_output: '8\n15',
+            hidden: false
+          },
+          {
+            input: '10\n20',
+            expected_output: '30\n200',
+            hidden: false
+          }
+        ])
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    worksheet['!cols'] = [
+      { wch: 20 },
+      { wch: 12 },
+      { wch: 18 },
+      { wch: 30 },
+      { wch: 40 },
+      { wch: 50 },
+      { wch: 50 }
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Questions');
+
+    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="no_boilerplate_template.xlsx"');
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to generate template', error: error.message });
+  }
+});
+
+// Bulk upload boilerplate questions
+router.post('/bulk-upload/boilerplate', verifyToken, requireAdmin, async (req, res) => {
+  try {
+    if (!req.files || !req.files.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const fileBuffer = req.files.file.data;
+    const { questions, errors: parseErrors } = parseBoilerplateTemplate(fileBuffer);
+
+    if (parseErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'File contains validation errors',
+        errors: parseErrors
+      });
+    }
+
+    if (questions.length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid questions found in file' });
+    }
+
+    const connection = await pool.getConnection();
+    const createdIds = [];
+    const errors = [];
+
+    try {
+      await connection.beginTransaction();
+
+      for (const { rowNum, question } of questions) {
+        try {
+          const [result] = await connection.execute(
+            `INSERT INTO questions
+            (title, function_name, description, difficulty, question_type, parameter_schema, tags, examples, has_boilerplate, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              question.title,
+              question.function_name,
+              question.description,
+              question.difficulty,
+              question.question_type || null,
+              JSON.stringify(question.parameter_schema || { params: [], returnType: '' }),
+              JSON.stringify(question.tags || { tags: [] }),
+              JSON.stringify(question.examples || []),
+              Boolean(question.has_boilerplate),
+              req.user.id
+            ]
+          );
+
+          const questionId = result.insertId;
+          createdIds.push(questionId);
+
+          // Insert test cases
+          for (const testCase of (question.testCases || [])) {
+            await connection.execute(
+              `INSERT INTO test_cases (question_id, input, expected_output, hidden)
+               VALUES (?, ?, ?, ?)`,
+              [questionId, testCase.input || '', testCase.expected_output || '', Boolean(testCase.hidden)]
+            );
+          }
+        } catch (error) {
+          errors.push({
+            row: rowNum,
+            title: question.title,
+            message: error.message
+          });
+        }
+      }
+
+      await connection.commit();
+
+      res.json({
+        success: true,
+        message: `Successfully created ${createdIds.length} questions`,
+        createdCount: createdIds.length,
+        totalRows: questions.length,
+        errors: errors.length > 0 ? errors : undefined
+      });
+    } catch (error) {
+      await connection.rollback();
+      res.status(500).json({ success: false, message: 'Failed to upload questions', error: error.message });
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to process file', error: error.message });
+  }
+});
+
+// Bulk upload no-boilerplate questions
+router.post('/bulk-upload/no-boilerplate', verifyToken, requireAdmin, async (req, res) => {
+  try {
+    if (!req.files || !req.files.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const fileBuffer = req.files.file.data;
+    const { questions, errors: parseErrors } = parseNoBoilerplateTemplate(fileBuffer);
+
+    if (parseErrors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'File contains validation errors',
+        errors: parseErrors
+      });
+    }
+
+    if (questions.length === 0) {
+      return res.status(400).json({ success: false, message: 'No valid questions found in file' });
+    }
+
+    const connection = await pool.getConnection();
+    const createdIds = [];
+    const errors = [];
+
+    try {
+      await connection.beginTransaction();
+
+      for (const { rowNum, question } of questions) {
+        try {
+          const [result] = await connection.execute(
+            `INSERT INTO questions
+            (title, function_name, description, difficulty, question_type, parameter_schema, tags, examples, has_boilerplate, created_by)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              question.title,
+              question.function_name || null,
+              question.description,
+              question.difficulty,
+              question.question_type || null,
+              JSON.stringify(question.parameter_schema || { params: [], returnType: '' }),
+              JSON.stringify(question.tags || { tags: [] }),
+              JSON.stringify(question.examples || []),
+              Boolean(question.has_boilerplate),
+              req.user.id
+            ]
+          );
+
+          const questionId = result.insertId;
+          createdIds.push(questionId);
+
+          // Insert test cases
+          for (const testCase of (question.testCases || [])) {
+            await connection.execute(
+              `INSERT INTO test_cases (question_id, input, expected_output, hidden)
+               VALUES (?, ?, ?, ?)`,
+              [questionId, testCase.input || '', testCase.expected_output || '', Boolean(testCase.hidden)]
+            );
+          }
+        } catch (error) {
+          errors.push({
+            row: rowNum,
+            title: question.title,
+            message: error.message
+          });
+        }
+      }
+
+      await connection.commit();
+
+      res.json({
+        success: true,
+        message: `Successfully created ${createdIds.length} questions`,
+        createdCount: createdIds.length,
+        totalRows: questions.length,
+        errors: errors.length > 0 ? errors : undefined
+      });
+    } catch (error) {
+      await connection.rollback();
+      res.status(500).json({ success: false, message: 'Failed to upload questions', error: error.message });
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to process file', error: error.message });
   }
 });
 

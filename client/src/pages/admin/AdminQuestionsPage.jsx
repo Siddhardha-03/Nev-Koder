@@ -8,7 +8,11 @@ import {
   deleteQuestion,
   getQuestionById,
   getQuestions,
-  updateQuestion
+  updateQuestion,
+  uploadQuestionsBulkBoilerplate,
+  uploadQuestionsBulkNoBoilerplate,
+  downloadTemplateBoilerplate,
+  downloadTemplateNoBoilerplate
 } from '../../services/adminService';
 import './AdminPages.css';
 
@@ -24,6 +28,11 @@ function AdminQuestionsPage() {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [showBulkUploadBoilerplate, setShowBulkUploadBoilerplate] = useState(false);
+  const [showBulkUploadNoBoilerplate, setShowBulkUploadNoBoilerplate] = useState(false);
+  const [bulkUploadFile, setBulkUploadFile] = useState(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
+  const [bulkUploadResult, setBulkUploadResult] = useState(null);
 
   const normalizedQuestions = useMemo(() => questions || [], [questions]);
 
@@ -123,6 +132,83 @@ function AdminQuestionsPage() {
     await loadQuestions(search, difficulty);
   };
 
+  const handleBulkUploadBoilerplate = async () => {
+    if (!bulkUploadFile) {
+      setError('Please select a file');
+      return;
+    }
+
+    setBulkUploading(true);
+    setError('');
+    setBulkUploadResult(null);
+
+    const response = await uploadQuestionsBulkBoilerplate(bulkUploadFile);
+    setBulkUploading(false);
+
+    if (!response.success) {
+      setError(response.message || 'Failed to upload questions');
+      setBulkUploadResult({
+        success: false,
+        errors: response.errors || []
+      });
+      return;
+    }
+
+    setBulkUploadResult({
+      success: true,
+      createdCount: response.createdCount,
+      totalRows: response.totalRows,
+      errors: response.errors || []
+    });
+
+    await loadQuestions(search, difficulty);
+    setBulkUploadFile(null);
+  };
+
+  const handleBulkUploadNoBoilerplate = async () => {
+    if (!bulkUploadFile) {
+      setError('Please select a file');
+      return;
+    }
+
+    setBulkUploading(true);
+    setError('');
+    setBulkUploadResult(null);
+
+    const response = await uploadQuestionsBulkNoBoilerplate(bulkUploadFile);
+    setBulkUploading(false);
+
+    if (!response.success) {
+      setError(response.message || 'Failed to upload questions');
+      setBulkUploadResult({
+        success: false,
+        errors: response.errors || []
+      });
+      return;
+    }
+
+    setBulkUploadResult({
+      success: true,
+      createdCount: response.createdCount,
+      totalRows: response.totalRows,
+      errors: response.errors || []
+    });
+
+    await loadQuestions(search, difficulty);
+    setBulkUploadFile(null);
+  };
+
+  const closeBulkUploadModal = (isBoilerplate) => {
+    if (isBoilerplate) {
+      setShowBulkUploadBoilerplate(false);
+    } else {
+      setShowBulkUploadNoBoilerplate(false);
+    }
+    setBulkUploadFile(null);
+    setBulkUploadResult(null);
+    setError('');
+  };
+
   return (
     <section>
       <LandingNavbar />
@@ -134,6 +220,8 @@ function AdminQuestionsPage() {
           </div>
           <div className="admin-header-actions">
             <button type="button" className="admin-btn admin-btn-primary" onClick={openCreate}>Create Question</button>
+            <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setShowBulkUploadBoilerplate(true)}>Upload Boilerplate</button>
+            <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setShowBulkUploadNoBoilerplate(true)}>Upload No-Boilerplate</button>
           </div>
         </header>
 
@@ -234,6 +322,204 @@ function AdminQuestionsPage() {
                 <button type="button" className="admin-btn admin-btn-secondary" onClick={() => setConfirmDelete(null)}>Cancel</button>
                 <button type="button" className="admin-btn admin-btn-danger" onClick={confirmDeleteQuestion}>Delete</button>
               </div>
+            </div>
+          </div>
+        ) : null}
+
+        {showBulkUploadBoilerplate ? (
+          <div className="admin-modal-overlay">
+            <div className="admin-modal" style={{ maxWidth: '600px' }}>
+              <div className="admin-modal-header">
+                <div>
+                  <h3>Bulk Upload Boilerplate Questions</h3>
+                  <p>Upload multiple questions with function signatures</p>
+                </div>
+                <button type="button" className="admin-btn admin-btn-secondary" onClick={() => closeBulkUploadModal(true)}>Close</button>
+              </div>
+              <div className="admin-modal-content">
+                {bulkUploadResult?.success ? (
+                  <div className="admin-loading" style={{ background: '#e8f9ee', color: '#18794e', border: '1px solid #bde8cc' }}>
+                    ✅ Successfully uploaded {bulkUploadResult.createdCount} of {bulkUploadResult.totalRows} questions
+                    {bulkUploadResult.errors?.length > 0 ? (
+                      <>
+                        <strong style={{ display: 'block', marginTop: '0.5rem' }}>Failed rows:</strong>
+                        {bulkUploadResult.errors.map((err, i) => (
+                          <div key={i} style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>
+                            Row {err.row}: {err.title} - {err.message}
+                          </div>
+                        ))}
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {bulkUploadResult?.success === false ? (
+                  <div className="admin-error">
+                    ❌ Upload failed
+                    {bulkUploadResult.errors?.length > 0 ? (
+                      <>
+                        <strong style={{ display: 'block', marginTop: '0.5rem' }}>Errors:</strong>
+                        {bulkUploadResult.errors.map((err, i) => (
+                          <div key={i} style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>
+                            Row {err.row}: {err.field} - {err.message}
+                          </div>
+                        ))}
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {!bulkUploadResult ? (
+                  <>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <p className="admin-label">Step 1: Download Template</p>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn-secondary"
+                        onClick={async () => {
+                          const response = await downloadTemplateBoilerplate();
+                          if (!response.success) {
+                            setError(response.message || 'Failed to download boilerplate template.');
+                          }
+                        }}
+                      >
+                        📥 Download Excel Template
+                      </button>
+                    </div>
+
+                    <div>
+                      <p className="admin-label">Step 2: Upload Completed File</p>
+                      <input
+                        type="file"
+                        accept=".xlsx,.xls,.csv"
+                        onChange={(e) => setBulkUploadFile(e.target.files?.[0])}
+                        className="admin-input"
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <p className="admin-helper">
+                        Selected file: {bulkUploadFile?.name || 'None'}
+                      </p>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+
+              {!bulkUploadResult ? (
+                <div className="admin-modal-footer">
+                  <button type="button" className="admin-btn admin-btn-secondary" onClick={() => closeBulkUploadModal(true)}>Cancel</button>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn-primary"
+                    onClick={handleBulkUploadBoilerplate}
+                    disabled={bulkUploading || !bulkUploadFile}
+                  >
+                    {bulkUploading ? 'Uploading...' : 'Upload Questions'}
+                  </button>
+                </div>
+              ) : (
+                <div className="admin-modal-footer">
+                  <button type="button" className="admin-btn admin-btn-primary" onClick={() => closeBulkUploadModal(true)}>Done</button>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
+
+        {showBulkUploadNoBoilerplate ? (
+          <div className="admin-modal-overlay">
+            <div className="admin-modal" style={{ maxWidth: '600px' }}>
+              <div className="admin-modal-header">
+                <div>
+                  <h3>Bulk Upload No-Boilerplate Questions</h3>
+                  <p>Upload multiple questions for full program I/O</p>
+                </div>
+                <button type="button" className="admin-btn admin-btn-secondary" onClick={() => closeBulkUploadModal(false)}>Close</button>
+              </div>
+              <div className="admin-modal-content">
+                {bulkUploadResult?.success ? (
+                  <div className="admin-loading" style={{ background: '#e8f9ee', color: '#18794e', border: '1px solid #bde8cc' }}>
+                    ✅ Successfully uploaded {bulkUploadResult.createdCount} of {bulkUploadResult.totalRows} questions
+                    {bulkUploadResult.errors?.length > 0 ? (
+                      <>
+                        <strong style={{ display: 'block', marginTop: '0.5rem' }}>Failed rows:</strong>
+                        {bulkUploadResult.errors.map((err, i) => (
+                          <div key={i} style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>
+                            Row {err.row}: {err.title} - {err.message}
+                          </div>
+                        ))}
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {bulkUploadResult?.success === false ? (
+                  <div className="admin-error">
+                    ❌ Upload failed
+                    {bulkUploadResult.errors?.length > 0 ? (
+                      <>
+                        <strong style={{ display: 'block', marginTop: '0.5rem' }}>Errors:</strong>
+                        {bulkUploadResult.errors.map((err, i) => (
+                          <div key={i} style={{ fontSize: '0.82rem', marginTop: '0.25rem' }}>
+                            Row {err.row}: {err.field} - {err.message}
+                          </div>
+                        ))}
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {!bulkUploadResult ? (
+                  <>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <p className="admin-label">Step 1: Download Template</p>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn-secondary"
+                        onClick={async () => {
+                          const response = await downloadTemplateNoBoilerplate();
+                          if (!response.success) {
+                            setError(response.message || 'Failed to download no-boilerplate template.');
+                          }
+                        }}
+                      >
+                        📥 Download Excel Template
+                      </button>
+                    </div>
+
+                    <div>
+                      <p className="admin-label">Step 2: Upload Completed File</p>
+                      <input
+                        type="file"
+                        accept=".xlsx,.xls,.csv"
+                        onChange={(e) => setBulkUploadFile(e.target.files?.[0])}
+                        className="admin-input"
+                        style={{ cursor: 'pointer' }}
+                      />
+                      <p className="admin-helper">
+                        Selected file: {bulkUploadFile?.name || 'None'}
+                      </p>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+
+              {!bulkUploadResult ? (
+                <div className="admin-modal-footer">
+                  <button type="button" className="admin-btn admin-btn-secondary" onClick={() => closeBulkUploadModal(false)}>Cancel</button>
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn-primary"
+                    onClick={handleBulkUploadNoBoilerplate}
+                    disabled={bulkUploading || !bulkUploadFile}
+                  >
+                    {bulkUploading ? 'Uploading...' : 'Upload Questions'}
+                  </button>
+                </div>
+              ) : (
+                <div className="admin-modal-footer">
+                  <button type="button" className="admin-btn admin-btn-primary" onClick={() => closeBulkUploadModal(false)}>Done</button>
+                </div>
+              )}
             </div>
           </div>
         ) : null}

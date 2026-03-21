@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 const adminApi = axios.create({
   baseURL: API_BASE_URL,
@@ -120,5 +120,73 @@ export const deleteLearningPath = async (id) => {
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to delete learning path.');
+  }
+};
+
+export const uploadQuestionsBulkBoilerplate = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await adminApi.post('/questions/bulk-upload/boilerplate', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    return extractError(error, 'Failed to upload boilerplate questions.');
+  }
+};
+
+export const uploadQuestionsBulkNoBoilerplate = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await adminApi.post('/questions/bulk-upload/no-boilerplate', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  } catch (error) {
+    return extractError(error, 'Failed to upload no-boilerplate questions.');
+  }
+};
+
+export const downloadTemplateBoilerplate = async () => {
+  try {
+    const response = await adminApi.get('/questions/templates/boilerplate', {
+      responseType: 'blob'
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'boilerplate_template.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    return { success: true };
+  } catch (error) {
+    return extractError(error, 'Failed to download boilerplate template.');
+  }
+};
+
+export const downloadTemplateNoBoilerplate = async () => {
+  try {
+    const response = await adminApi.get('/questions/templates/no-boilerplate', {
+      responseType: 'blob'
+    });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'no_boilerplate_template.xlsx');
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    return { success: true };
+  } catch (error) {
+    return extractError(error, 'Failed to download no-boilerplate template.');
   }
 };

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import fileUpload from 'express-fileupload';
 import authRoutes from './routes/authRoutes.js';
 import executeRoutes from './routes/execute.js';
 import questionRoutes from './routes/questions.js';
@@ -18,6 +19,7 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(fileUpload({ limits: { fileSize: 50 * 1024 * 1024 } })); // 50MB limit
 app.use(corsMiddleware);
 
 // Health check endpoint
