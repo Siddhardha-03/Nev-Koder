@@ -3,44 +3,36 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const requiredEmailEnv = ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASSWORD'];
+const resendApiUrl = 'https://api.resend.com/emails';
+const requiredSmtpEnv = ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASSWORD'];
 
-const getMissingEmailEnv = () => requiredEmailEnv.filter((key) => !process.env[key]);
+const getMissingSmtpEnv = () => requiredSmtpEnv.filter((key) => !process.env[key]);
+const isResendConfigured = () => Boolean(process.env.RESEND_API_KEY && (process.env.EMAIL_FROM || process.env.EMAIL_USER));
+const isSmtpConfigured = () => getMissingSmtpEnv().length === 0;
 
-export const isEmailConfigured = () => getMissingEmailEnv().length === 0;
-
-export const getEmailConfigStatus = () => ({
-  configured: isEmailConfigured(),
-  missing: getMissingEmailEnv()
-});
-
-export const verifyEmailTransport = async () => {
-  const status = getEmailConfigStatus();
-  if (!status.configured) {
+export const getEmailConfigStatus = () => {
+  if (isResendConfigured()) {
     return {
-      success: false,
-      reason: 'missing_env',
-      message: `Missing env: ${status.missing.join(', ')}`
+      provider: 'resend',
+      configured: true,
+      missing: []
     };
   }
 
-  try {
-    await transporter.verify();
-    return { success: true, reason: 'ok', message: 'SMTP connection verified' };
-  } catch (error) {
-    return {
-      success: false,
-      reason: 'smtp_error',
-      message: error?.message || 'SMTP verification failed'
-    };
-  }
+  return {
+    provider: 'smtp',
+    configured: isSmtpConfigured(),
+    missing: getMissingSmtpEnv()
+  };
 };
 
-// Create transporter
+export const isEmailConfigured = () => getEmailConfigStatus().configured;
+
+const smtpPort = Number(process.env.EMAIL_PORT || 587);
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT || 587),
-  secure: Number(process.env.EMAIL_PORT || 587) === 465,
+  port: smtpPort,
+  secure: smtpPort === 465,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
@@ -58,7 +50,87 @@ const ensureEmailConfigured = () => {
   return errorMessage;
 };
 
-// Send OTP email
+const sendViaResend = async ({ to, subject, html }) => {
+  const from = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+
+  const response = await fetch(resendApiUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      from,
+      to,
+      subject,
+      html
+    })
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message = payload?.message || payload?.error || `Resend request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  return payload;
+};
+
+const sendViaSmtp = async ({ to, subject, html }) => {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    html
+  });
+};
+
+const sendEmail = async ({ to, subject, html }) => {
+  if (isResendConfigured()) {
+    await sendViaResend({ to, subject, html });
+    return { success: true, message: 'Email sent successfully via Resend' };
+  }
+
+  await sendViaSmtp({ to, subject, html });
+  return { success: true, message: 'Email sent successfully via SMTP' };
+};
+
+export const verifyEmailTransport = async () => {
+  const status = getEmailConfigStatus();
+
+  if (!status.configured) {
+    return {
+      success: false,
+      reason: 'missing_env',
+      message: `Missing env: ${status.missing.join(', ')}`
+    };
+  }
+
+  if (status.provider === 'resend') {
+    return {
+      success: true,
+      reason: 'ok',
+      message: 'Resend API configuration detected'
+    };
+  }
+
+  try {
+    await transporter.verify();
+    return {
+      success: true,
+      reason: 'ok',
+      message: 'SMTP connection verified'
+    };
+  } catch (error) {
+    return {
+      success: false,
+      reason: 'smtp_error',
+      message: error?.message || 'SMTP verification failed'
+    };
+  }
+};
+
 export const sendOTPEmail = async (email, otp, name) => {
   try {
     const configError = ensureEmailConfigured();
@@ -81,21 +153,17 @@ export const sendOTPEmail = async (email, otp, name) => {
       </div>
     `;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    return await sendEmail({
       to: email,
       subject: 'Your OTP for nev-koder Email Verification',
       html: htmlContent
     });
-
-    return { success: true, message: 'OTP sent successfully' };
   } catch (error) {
     console.error('Email send error:', error);
     return { success: false, message: 'Failed to send email', error: error.message };
   }
 };
 
-// Send password reset email
 export const sendPasswordResetEmail = async (email, resetToken, name) => {
   try {
     const configError = ensureEmailConfigured();
@@ -120,21 +188,17 @@ export const sendPasswordResetEmail = async (email, resetToken, name) => {
       </div>
     `;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    return await sendEmail({
       to: email,
       subject: 'Reset Your nev-koder Password',
       html: htmlContent
     });
-
-    return { success: true, message: 'Password reset email sent successfully' };
   } catch (error) {
     console.error('Email send error:', error);
     return { success: false, message: 'Failed to send email', error: error.message };
   }
 };
 
-// Send welcome email
 export const sendWelcomeEmail = async (email, name) => {
   try {
     const configError = ensureEmailConfigured();
@@ -162,14 +226,11 @@ export const sendWelcomeEmail = async (email, name) => {
       </div>
     `;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+    return await sendEmail({
       to: email,
       subject: 'Welcome to nev-koder!',
       html: htmlContent
     });
-
-    return { success: true, message: 'Welcome email sent successfully' };
   } catch (error) {
     console.error('Email send error:', error);
     return { success: false, message: 'Failed to send email', error: error.message };
