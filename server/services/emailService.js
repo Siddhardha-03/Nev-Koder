@@ -3,20 +3,47 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const requiredEmailEnv = ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASSWORD'];
+
+const getMissingEmailEnv = () => requiredEmailEnv.filter((key) => !process.env[key]);
+
+export const isEmailConfigured = () => getMissingEmailEnv().length === 0;
+
+export const getEmailConfigStatus = () => ({
+  configured: isEmailConfigured(),
+  missing: getMissingEmailEnv()
+});
+
 // Create transporter
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: false, // true for 465, false for other ports
+  port: Number(process.env.EMAIL_PORT || 587),
+  secure: Number(process.env.EMAIL_PORT || 587) === 465,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
   }
 });
 
+const ensureEmailConfigured = () => {
+  const status = getEmailConfigStatus();
+  if (status.configured) {
+    return null;
+  }
+
+  const errorMessage = `Email service is not configured. Missing env: ${status.missing.join(', ')}`;
+  console.error(errorMessage);
+  return errorMessage;
+};
+
 // Send OTP email
 export const sendOTPEmail = async (email, otp, name) => {
   try {
+    const configError = ensureEmailConfigured();
+    if (configError) {
+      return { success: false, message: configError, error: configError };
+    }
+
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Verify Your Email</h2>
@@ -49,6 +76,11 @@ export const sendOTPEmail = async (email, otp, name) => {
 // Send password reset email
 export const sendPasswordResetEmail = async (email, resetToken, name) => {
   try {
+    const configError = ensureEmailConfigured();
+    if (configError) {
+      return { success: false, message: configError, error: configError };
+    }
+
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
     const htmlContent = `
@@ -83,6 +115,11 @@ export const sendPasswordResetEmail = async (email, resetToken, name) => {
 // Send welcome email
 export const sendWelcomeEmail = async (email, name) => {
   try {
+    const configError = ensureEmailConfigured();
+    if (configError) {
+      return { success: false, message: configError, error: configError };
+    }
+
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Welcome to nev-koder!</h2>

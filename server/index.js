@@ -8,11 +8,17 @@ import questionRoutes from './routes/questions.js';
 import learningPathRoutes from './routes/learningPaths.js';
 import { corsMiddleware, errorHandler } from './middlewares/authMiddleware.js';
 import pool from './config/database.js';
+import { getEmailConfigStatus } from './services/emailService.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Required on Render/behind proxies so req.ip and secure cookies behave correctly.
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 
 // Middleware
 app.use(express.json());
@@ -66,6 +72,13 @@ const startServer = async () => {
     console.log('✅ DB connected');
   } catch (error) {
     console.error(`❌ DB connection failed: ${error.message}`);
+  }
+
+  const emailStatus = getEmailConfigStatus();
+  if (emailStatus.configured) {
+    console.log('✅ Email service configured');
+  } else {
+    console.warn(`⚠️ Email service missing env: ${emailStatus.missing.join(', ')}`);
   }
 
   app.listen(PORT, () => {
