@@ -4,11 +4,45 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const resendApiUrl = 'https://api.resend.com/emails';
-const requiredSmtpEnv = ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_USER', 'EMAIL_PASSWORD'];
+const requiredSmtpEnv = ['EMAIL_USER', 'EMAIL_PASSWORD'];
 
 const getMissingSmtpEnv = () => requiredSmtpEnv.filter((key) => !process.env[key]);
 const isResendConfigured = () => Boolean(process.env.RESEND_API_KEY && (process.env.EMAIL_FROM || process.env.EMAIL_USER));
 const isSmtpConfigured = () => getMissingSmtpEnv().length === 0;
+
+const dedupe = (values) => [...new Set(values.filter(Boolean))];
+
+const parseList = (value) => (value || '')
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean);
+
+const getSmtpHosts = () => {
+  const configuredHosts = parseList(process.env.EMAIL_HOSTS);
+  const primaryHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  return dedupe([...configuredHosts, primaryHost, 'smtp.gmail.com', 'smtp-relay.gmail.com']);
+};
+
+const parsePort = (value) => {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+};
+
+const getSmtpPorts = () => {
+  const configuredPorts = parseList(process.env.EMAIL_PORTS)
+    .map(parsePort)
+    .filter(Boolean);
+
+  const primaryPort = parsePort(process.env.EMAIL_PORT || '');
+
+  return dedupe([...configuredPorts, primaryPort, 465, 587]);
+};
+
+const getSmtpTimeouts = () => ({
+  connectionTimeout: Number(process.env.EMAIL_CONNECTION_TIMEOUT_MS || 8000),
+  greetingTimeout: Number(process.env.EMAIL_GREETING_TIMEOUT_MS || 8000),
+  socketTimeout: Number(process.env.EMAIL_SOCKET_TIMEOUT_MS || 10000)
+});
 
 export const getEmailConfigStatus = () => {
   if (isResendConfigured()) {
@@ -28,16 +62,45 @@ export const getEmailConfigStatus = () => {
 
 export const isEmailConfigured = () => getEmailConfigStatus().configured;
 
-const smtpPort = Number(process.env.EMAIL_PORT || 587);
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: smtpPort,
-  secure: smtpPort === 465,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
+const createTransporter = ({ host, port }) => {
+  const secure = port === 465;
+  const timeouts = getSmtpTimeouts();
+
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    requireTLS: !secure,
+    ...timeouts,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD
+    }
+  });
+};
+
+const smtpAttempts = async (action) => {
+  const hosts = getSmtpHosts();
+  const ports = getSmtpPorts();
+  const errors = [];
+
+  for (const host of hosts) {
+    for (const port of ports) {
+      const transporter = createTransporter({ host, port });
+      try {
+        const result = await action(transporter);
+        return { success: true, result, host, port };
+      } catch (error) {
+        errors.push(`${host}:${port} -> ${error?.code || 'ERROR'} ${error?.message || 'Unknown error'}`);
+      }
+    }
   }
-});
+
+  return {
+    success: false,
+    error: errors.join(' | ') || 'All SMTP attempts failed'
+  };
+};
 
 const ensureEmailConfigured = () => {
   const status = getEmailConfigStatus();
@@ -78,12 +141,16 @@ const sendViaResend = async ({ to, subject, html }) => {
 };
 
 const sendViaSmtp = async ({ to, subject, html }) => {
-  await transporter.sendMail({
+  const attempt = await smtpAttempts((transporter) => transporter.sendMail({
     from: process.env.EMAIL_USER,
     to,
     subject,
     html
-  });
+  }));
+
+  if (!attempt.success) {
+    throw new Error(attempt.error);
+  }
 };
 
 const sendEmail = async ({ to, subject, html }) => {
@@ -116,11 +183,15 @@ export const verifyEmailTransport = async () => {
   }
 
   try {
-    await transporter.verify();
+    const attempt = await smtpAttempts((transporter) => transporter.verify());
+    if (!attempt.success) {
+      throw new Error(attempt.error);
+    }
+
     return {
       success: true,
       reason: 'ok',
-      message: 'SMTP connection verified'
+      message: `SMTP connection verified (${attempt.host}:${attempt.port})`
     };
   } catch (error) {
     return {
@@ -237,4 +308,4 @@ export const sendWelcomeEmail = async (email, name) => {
   }
 };
 
-export default transporter;
+export default createTransporter({ host: process.env.EMAIL_HOST || 'smtp.gmail.com', port: parsePort(process.env.EMAIL_PORT || '587') || 587 });
