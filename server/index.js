@@ -112,6 +112,12 @@ const startServer = async () => {
     console.error(`❌ DB connection failed: ${error.message}`);
   }
 
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`📧 Make sure to configure email settings in .env file`);
+    console.log(`🔐 Make sure JWT_SECRET is set in .env file`);
+  });
+
   const emailStatus = getEmailConfigStatus();
   if (emailStatus.configured) {
     console.log('✅ Email service configured');
@@ -119,18 +125,17 @@ const startServer = async () => {
     console.warn(`⚠️ Email service missing env: ${emailStatus.missing.join(', ')}`);
   }
 
-  const emailVerification = await verifyEmailTransport();
-  if (emailVerification.success) {
-    console.log('✅ Email SMTP verified');
-  } else {
-    console.warn(`⚠️ Email SMTP check failed (${emailVerification.reason}): ${emailVerification.message}`);
-  }
-
-  app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
-    console.log(`📧 Make sure to configure email settings in .env file`);
-    console.log(`🔐 Make sure JWT_SECRET is set in .env file`);
-  });
+  verifyEmailTransport()
+    .then((emailVerification) => {
+      if (emailVerification.success) {
+        console.log('✅ Email SMTP verified');
+      } else {
+        console.warn(`⚠️ Email SMTP check failed (${emailVerification.reason}): ${emailVerification.message}`);
+      }
+    })
+    .catch((error) => {
+      console.warn(`⚠️ Email SMTP check failed unexpectedly: ${error.message}`);
+    });
 };
 
 startServer();
