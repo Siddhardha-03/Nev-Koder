@@ -8,7 +8,7 @@ import questionRoutes from './routes/questions.js';
 import learningPathRoutes from './routes/learningPaths.js';
 import { corsMiddleware, errorHandler } from './middlewares/authMiddleware.js';
 import pool from './config/database.js';
-import { getEmailConfigStatus } from './services/emailService.js';
+import { getEmailConfigStatus, verifyEmailTransport } from './services/emailService.js';
 
 dotenv.config();
 
@@ -31,6 +31,21 @@ app.get('/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
 });
 
+app.get('/health/email', async (req, res) => {
+  const configStatus = getEmailConfigStatus();
+  const verification = await verifyEmailTransport();
+
+  const payload = {
+    success: verification.success,
+    configured: configStatus.configured,
+    missing: configStatus.missing,
+    reason: verification.reason,
+    message: verification.message
+  };
+
+  return res.status(verification.success ? 200 : 503).json(payload);
+});
+
 // Root endpoint for quick API discovery
 app.get('/', (req, res) => {
   res.json({
@@ -38,6 +53,7 @@ app.get('/', (req, res) => {
     message: 'nev-koder auth API is running',
     endpoints: {
       health: '/health',
+      emailHealth: '/health/email',
       authBase: '/api/auth',
       execute: '/api/execute',
       executePreview: '/api/execute/preview',
@@ -79,6 +95,13 @@ const startServer = async () => {
     console.log('✅ Email service configured');
   } else {
     console.warn(`⚠️ Email service missing env: ${emailStatus.missing.join(', ')}`);
+  }
+
+  const emailVerification = await verifyEmailTransport();
+  if (emailVerification.success) {
+    console.log('✅ Email SMTP verified');
+  } else {
+    console.warn(`⚠️ Email SMTP check failed (${emailVerification.reason}): ${emailVerification.message}`);
   }
 
   app.listen(PORT, () => {

@@ -14,6 +14,28 @@ export const getEmailConfigStatus = () => ({
   missing: getMissingEmailEnv()
 });
 
+export const verifyEmailTransport = async () => {
+  const status = getEmailConfigStatus();
+  if (!status.configured) {
+    return {
+      success: false,
+      reason: 'missing_env',
+      message: `Missing env: ${status.missing.join(', ')}`
+    };
+  }
+
+  try {
+    await transporter.verify();
+    return { success: true, reason: 'ok', message: 'SMTP connection verified' };
+  } catch (error) {
+    return {
+      success: false,
+      reason: 'smtp_error',
+      message: error?.message || 'SMTP verification failed'
+    };
+  }
+};
+
 // Create transporter
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
