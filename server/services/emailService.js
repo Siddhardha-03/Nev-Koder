@@ -4,10 +4,12 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const resendApiUrl = 'https://api.resend.com/emails';
+const brevoApiUrl = 'https://api.brevo.com/v3/smtp/email';
 const requiredSmtpEnv = ['EMAIL_USER', 'EMAIL_PASSWORD'];
 
 const getMissingSmtpEnv = () => requiredSmtpEnv.filter((key) => !process.env[key]);
 const isResendConfigured = () => Boolean(process.env.RESEND_API_KEY && (process.env.EMAIL_FROM || process.env.EMAIL_USER));
+const isBrevoApiConfigured = () => Boolean(process.env.BREVO_API_KEY && (process.env.EMAIL_FROM || process.env.EMAIL_USER));
 const isSmtpConfigured = () => getMissingSmtpEnv().length === 0;
 
 const dedupe = (values) => [...new Set(values.filter(Boolean))];
@@ -48,6 +50,14 @@ export const getEmailConfigStatus = () => {
   if (isResendConfigured()) {
     return {
       provider: 'resend',
+      configured: true,
+      missing: []
+    };
+  }
+
+  if (isBrevoApiConfigured()) {
+    return {
+      provider: 'brevo_api',
       configured: true,
       missing: []
     };
@@ -140,6 +150,32 @@ const sendViaResend = async ({ to, subject, html }) => {
   return payload;
 };
 
+const sendViaBrevoApi = async ({ to, subject, html }) => {
+  const from = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+
+  const response = await fetch(brevoApiUrl, {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      sender: { email: from },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html
+    })
+  });
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = payload?.message || payload?.code || `Brevo API request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  return payload;
+};
+
 const sendViaSmtp = async ({ to, subject, html }) => {
   const attempt = await smtpAttempts((transporter) => transporter.sendMail({
     from: process.env.EMAIL_USER,
@@ -157,6 +193,11 @@ const sendEmail = async ({ to, subject, html }) => {
   if (isResendConfigured()) {
     await sendViaResend({ to, subject, html });
     return { success: true, message: 'Email sent successfully via Resend' };
+  }
+
+  if (isBrevoApiConfigured()) {
+    await sendViaBrevoApi({ to, subject, html });
+    return { success: true, message: 'Email sent successfully via Brevo API' };
   }
 
   await sendViaSmtp({ to, subject, html });
@@ -179,6 +220,14 @@ export const verifyEmailTransport = async () => {
       success: true,
       reason: 'ok',
       message: 'Resend API configuration detected'
+    };
+  }
+
+  if (status.provider === 'brevo_api') {
+    return {
+      success: true,
+      reason: 'ok',
+      message: 'Brevo API configuration detected'
     };
   }
 
