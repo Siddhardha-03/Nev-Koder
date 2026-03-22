@@ -15,6 +15,14 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Required when running behind reverse proxies (e.g., Nginx on DigitalOcean).
+const trustProxyValue = process.env.TRUST_PROXY;
+if (trustProxyValue === 'true') {
+  app.set('trust proxy', true);
+} else if (trustProxyValue && !Number.isNaN(Number(trustProxyValue))) {
+  app.set('trust proxy', Number(trustProxyValue));
+}
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
