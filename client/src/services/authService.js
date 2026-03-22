@@ -1,4 +1,13 @@
 import axios from 'axios';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  updateProfile,
+  signOut
+} from 'firebase/auth';
+import { auth, firebaseConfigError } from './firebaseClient';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -14,7 +23,7 @@ const api = axios.create({
 // Add token to request headers
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
-  if (token) {
+  if (token && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -25,12 +34,10 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    const isAuthEndpoint = originalRequest?.url?.includes('/auth/login')
-      || originalRequest?.url?.includes('/auth/register')
-      || originalRequest?.url?.includes('/auth/verify-otp')
-      || originalRequest?.url?.includes('/auth/resend-otp')
-      || originalRequest?.url?.includes('/auth/forgot-password')
+    const isAuthEndpoint = originalRequest?.url?.includes('/auth/forgot-password')
       || originalRequest?.url?.includes('/auth/reset-password')
+      || originalRequest?.url?.includes('/auth/firebase/sync')
+      || originalRequest?.url?.includes('/auth/firebase/me')
       || originalRequest?.url?.includes('/auth/refresh-token');
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
@@ -55,6 +62,63 @@ api.interceptors.response.use(
   }
 );
 
+const persistAuthState = (response) => {
+  localStorage.setItem('accessToken', response.accessToken);
+  localStorage.setItem('user', JSON.stringify(response.user));
+};
+
+const syncFirebaseSession = async (firebaseIdToken) => {
+  const response = await api.post(
+    '/auth/firebase/sync',
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${firebaseIdToken}`
+      }
+    }
+  );
+
+  if (response.data.success) {
+    persistAuthState(response.data);
+  }
+
+  return response.data;
+};
+
+const postWithFirebaseToken = async (path, payload = {}) => {
+  const readinessError = ensureFirebaseReady();
+  if (readinessError) {
+    return readinessError;
+  }
+
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    return {
+      success: false,
+      message: 'Firebase session expired. Please sign in again.'
+    };
+  }
+
+  const idToken = await currentUser.getIdToken(true);
+  const response = await api.post(path, payload, {
+    headers: {
+      Authorization: `Bearer ${idToken}`
+    }
+  });
+
+  return response.data;
+};
+
+const ensureFirebaseReady = () => {
+  if (!auth) {
+    return {
+      success: false,
+      message: firebaseConfigError || 'Firebase is not configured.'
+    };
+  }
+  return null;
+};
+
 // Auth Service Functions
 
 /**
@@ -67,66 +131,39 @@ api.interceptors.response.use(
  */
 export const registerUser = async (name, email, password, confirmPassword) => {
   try {
-    const response = await api.post('/auth/register', {
-      name,
-      email,
-      password,
-      confirmPassword
-    });
-    return response.data;
+    const readinessError = ensureFirebaseReady();
+    if (readinessError) {
+      return readinessError;
+    }
+
+    if (password !== confirmPassword) {
+      return {
+        success: false,
+        message: 'Passwords do not match.'
+      };
+    }
+
+    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    if (name?.trim()) {
+      await updateProfile(credential.user, { displayName: name.trim() });
+    }
+
+    const otpResponse = await postWithFirebaseToken('/auth/firebase/register/request-otp');
+    if (otpResponse.success) {
+      sessionStorage.setItem('pendingRegistrationEmail', email);
+      return {
+        success: true,
+        requiresOtp: true,
+        email,
+        message: otpResponse.message || 'OTP sent successfully'
+      };
+    }
+
+    return otpResponse;
   } catch (error) {
     return {
       success: false,
       message: error.response?.data?.message || 'Registration failed. Please try again.',
-      error: error.message
-    };
-  }
-};
-
-/**
- * Verify OTP code
- * @param {number} userId - User's ID
- * @param {string} otp - 6-digit OTP code
- * @returns {Promise<object>} Verification response with access token and user info
- */
-export const verifyOTP = async (userId, otp) => {
-  try {
-    const response = await api.post('/auth/verify-otp', {
-      userId,
-      otp
-    });
-
-    if (response.data.success) {
-      // Save token and user info
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-    }
-
-    return response.data;
-  } catch (error) {
-    return {
-      success: false,
-      message: error.response?.data?.message || 'OTP verification failed.',
-      error: error.message
-    };
-  }
-};
-
-/**
- * Resend OTP code
- * @param {number} userId - User's ID
- * @returns {Promise<object>} Resend response
- */
-export const resendOTPCode = async (userId) => {
-  try {
-    const response = await api.post('/auth/resend-otp', {
-      userId
-    });
-    return response.data;
-  } catch (error) {
-    return {
-      success: false,
-      message: error.response?.data?.message || 'Failed to resend OTP.',
       error: error.message
     };
   }
@@ -140,22 +177,49 @@ export const resendOTPCode = async (userId) => {
  */
 export const loginUser = async (email, password) => {
   try {
-    const response = await api.post('/auth/login', {
-      email,
-      password
-    });
-
-    if (response.data.success) {
-      // Save token and user info
-      localStorage.setItem('accessToken', response.data.accessToken);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+    const readinessError = ensureFirebaseReady();
+    if (readinessError) {
+      return readinessError;
     }
 
-    return response.data;
+    const credential = await signInWithEmailAndPassword(auth, email, password);
+    const idToken = await credential.user.getIdToken();
+    const syncResponse = await syncFirebaseSession(idToken);
+    if (!syncResponse.success && syncResponse.requiresOtp) {
+      sessionStorage.setItem('pendingRegistrationEmail', email);
+    }
+    return syncResponse;
   } catch (error) {
     return {
       success: false,
       message: error.response?.data?.message || 'Login failed. Please check your credentials.',
+      error: error.message
+    };
+  }
+};
+
+const googleProvider = new GoogleAuthProvider();
+
+export const continueWithGoogle = async () => {
+  try {
+    const readinessError = ensureFirebaseReady();
+    if (readinessError) {
+      return readinessError;
+    }
+
+    const credential = await signInWithPopup(auth, googleProvider);
+    const idToken = await credential.user.getIdToken(true);
+    const syncResponse = await syncFirebaseSession(idToken);
+
+    if (!syncResponse.success && syncResponse.requiresOtp) {
+      sessionStorage.setItem('pendingRegistrationEmail', credential.user.email || '');
+    }
+
+    return syncResponse;
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Google sign-in failed. Please try again.',
       error: error.message
     };
   }
@@ -182,16 +246,18 @@ export const forgotPassword = async (email) => {
 };
 
 /**
- * Reset password with reset token
- * @param {string} token - Reset token from email
+ * Reset password using email + OTP + new password
+ * @param {string} email - User's email
+ * @param {string} otp - 6-digit OTP code
  * @param {string} newPassword - New password
  * @param {string} confirmPassword - Password confirmation
  * @returns {Promise<object>} Password reset response
  */
-export const resetPassword = async (token, newPassword, confirmPassword) => {
+export const resetPasswordWithOTP = async (email, otp, newPassword, confirmPassword) => {
   try {
     const response = await api.post('/auth/reset-password', {
-      token,
+      email,
+      otp,
       newPassword,
       confirmPassword
     });
@@ -200,6 +266,37 @@ export const resetPassword = async (token, newPassword, confirmPassword) => {
     return {
       success: false,
       message: error.response?.data?.message || 'Password reset failed.',
+      error: error.message
+    };
+  }
+};
+
+export const resetPassword = resetPasswordWithOTP;
+
+export const verifyRegistrationOTP = async (otp) => {
+  try {
+    const response = await postWithFirebaseToken('/auth/firebase/register/verify-otp', { otp });
+    if (response.success) {
+      persistAuthState(response);
+      sessionStorage.removeItem('pendingRegistrationEmail');
+    }
+    return response;
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'OTP verification failed.',
+      error: error.message
+    };
+  }
+};
+
+export const resendRegistrationOTP = async () => {
+  try {
+    return await postWithFirebaseToken('/auth/firebase/register/resend-otp');
+  } catch (error) {
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Failed to resend OTP.',
       error: error.message
     };
   }
@@ -259,6 +356,9 @@ export const getDashboardStats = async () => {
  * Logout user (clear local storage)
  */
 export const logout = () => {
+  if (auth) {
+    signOut(auth).catch(() => {});
+  }
   localStorage.removeItem('accessToken');
   localStorage.removeItem('user');
 };
@@ -282,11 +382,13 @@ export const getStoredUser = () => {
 
 export default {
   registerUser,
-  verifyOTP,
-  resendOTPCode,
   loginUser,
+  continueWithGoogle,
+  verifyRegistrationOTP,
+  resendRegistrationOTP,
   forgotPassword,
-  resetPassword,
+  resetPassword: resetPasswordWithOTP,
+  resetPasswordWithOTP,
   refreshToken,
   getCurrentUser,
   getDashboardStats,

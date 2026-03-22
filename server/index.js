@@ -9,6 +9,8 @@ import questionRoutes from './routes/questions.js';
 import learningPathRoutes from './routes/learningPaths.js';
 import { corsMiddleware, errorHandler } from './middlewares/authMiddleware.js';
 import pool from './config/database.js';
+import { isFirebaseInitialized } from './firebaseAdmin.js';
+import { verifyEmailTransporter } from './services/emailService.js';
 
 dotenv.config();
 
@@ -32,7 +34,16 @@ app.use(corsMiddleware);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ success: true, message: 'Server is running' });
+  res.json({
+    success: true,
+    message: 'Server is running',
+    services: {
+      firebaseAuthEnabled: String(process.env.FIREBASE_AUTH_ENABLED || 'false').toLowerCase() === 'true',
+      firebaseInitialized: isFirebaseInitialized,
+      emailHostConfigured: Boolean(process.env.EMAIL_HOST),
+      emailUserConfigured: Boolean(process.env.EMAIL_USER)
+    }
+  });
 });
 
 // Root endpoint for quick API discovery
@@ -47,8 +58,11 @@ app.get('/', (req, res) => {
       executePreview: '/api/execute/preview',
       questions: '/api/questions',
       publicQuestions: '/api/questions/public',
-      register: '/api/auth/register',
-      login: '/api/auth/login'
+      firebaseSync: '/api/auth/firebase/sync',
+      requestRegistrationOtp: '/api/auth/firebase/register/request-otp',
+      verifyRegistrationOtp: '/api/auth/firebase/register/verify-otp',
+      forgotPassword: '/api/auth/forgot-password',
+      resetPassword: '/api/auth/reset-password'
     }
   });
 });
@@ -69,6 +83,8 @@ app.use(errorHandler);
 
 // Start server
 const startServer = async () => {
+  let smtpStatus = { success: false, message: 'SMTP check not run' };
+
   try {
     const connection = await pool.getConnection();
     await connection.ping();
@@ -78,9 +94,24 @@ const startServer = async () => {
     console.error(`❌ DB connection failed: ${error.message}`);
   }
 
+  smtpStatus = await verifyEmailTransporter();
+  if (smtpStatus.success) {
+    console.log('✅ SMTP connected');
+  } else {
+    console.warn(`⚠️ SMTP check failed: ${smtpStatus.message}`);
+  }
+
+  if (String(process.env.FIREBASE_AUTH_ENABLED || 'false').toLowerCase() === 'true') {
+    if (isFirebaseInitialized) {
+      console.log('✅ Firebase Admin initialized');
+    } else {
+      console.warn('⚠️ Firebase auth is enabled but Firebase Admin is not initialized');
+    }
+  }
+
   app.listen(PORT, () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);
-    console.log(`📧 Make sure to configure email settings in .env file`);
+    console.log(`📧 Email status: ${smtpStatus.success ? 'ready' : 'check configuration'}`);
     console.log(`🔐 Make sure JWT_SECRET is set in .env file`);
   });
 };

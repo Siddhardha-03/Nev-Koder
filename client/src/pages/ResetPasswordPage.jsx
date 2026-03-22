@@ -6,9 +6,10 @@ import './AuthPages.css'
 function ResetPasswordPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const resetToken = searchParams.get('token')
+  const email = (searchParams.get('email') || '').trim().toLowerCase()
 
   const [form, setForm] = useState({
+    otp: '',
     newPassword: '',
     confirmPassword: ''
   })
@@ -27,6 +28,10 @@ function ResetPasswordPage() {
   function validateForm() {
     const nextErrors = {}
 
+    if (!/^\d{6}$/.test(form.otp)) {
+      nextErrors.otp = 'OTP must be 6 digits.'
+    }
+
     if (form.newPassword.length < 6) {
       nextErrors.newPassword = 'Password must be at least 6 characters.'
     }
@@ -44,8 +49,8 @@ function ResetPasswordPage() {
     setServerError('')
     setSuccessMessage('')
 
-    if (!resetToken) {
-      setServerError('Invalid reset link. Please request a new one.')
+    if (!email) {
+      setServerError('Invalid reset request. Please request a new OTP.')
       return
     }
 
@@ -56,7 +61,8 @@ function ResetPasswordPage() {
     try {
       setLoading(true)
       const response = await authService.resetPassword(
-        resetToken,
+        email,
+        form.otp,
         form.newPassword,
         form.confirmPassword
       )
@@ -75,17 +81,17 @@ function ResetPasswordPage() {
     }
   }
 
-  if (!resetToken) {
+  if (!email) {
     return (
       <section className="auth-shell">
         <div className="auth-card">
           <div className="auth-top-link">
             <Link to="/login">← Back to login</Link>
           </div>
-          <h1 className="auth-title">Invalid Reset Link</h1>
-          <p className="auth-subtitle">This reset link is invalid or has expired.</p>
+          <h1 className="auth-title">Invalid Reset Request</h1>
+          <p className="auth-subtitle">This reset request is invalid or incomplete.</p>
           <Link to="/forgot-password" className="auth-submit" style={{ display: 'block', textAlign: 'center' }}>
-            Request New Link
+            Request OTP
           </Link>
         </div>
       </section>
@@ -105,9 +111,25 @@ function ResetPasswordPage() {
         </div>
 
         <h1 className="auth-title">Reset Password</h1>
-        <p className="auth-subtitle">Enter your new password below.</p>
+        <p className="auth-subtitle">Enter the OTP sent to {email}, then set a new password.</p>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
+          <div className="form-field">
+            <label htmlFor="otp">OTP Code</label>
+            <input
+              id="otp"
+              name="otp"
+              type="text"
+              value={form.otp}
+              onChange={handleInputChange}
+              placeholder="6-digit OTP"
+              maxLength="6"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+            />
+            {errors.otp ? <p className="input-error">{errors.otp}</p> : null}
+          </div>
+
           <div className="form-field">
             <label htmlFor="newPassword">New Password</label>
             <input

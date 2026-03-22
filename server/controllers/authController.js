@@ -276,6 +276,14 @@ export const login = async (req, res) => {
 
     const user = users[0];
 
+    if (user.auth_provider === 'firebase' && user.firebase_uid) {
+      connection.release();
+      return res.status(403).json({
+        success: false,
+        message: 'This account uses Firebase sign-in. Please continue with Firebase login.'
+      });
+    }
+
     // Check if user is verified
     if (!user.is_verified) {
       connection.release();

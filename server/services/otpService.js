@@ -1,10 +1,23 @@
 import pool from '../config/database.js';
 import { generateOTP, isOTPExpired } from '../utils/otp.js';
 
+const OTP_PURPOSES = {
+  EMAIL_VERIFICATION: 'email_verification',
+  PASSWORD_RESET: 'password_reset'
+};
+
+const normalizePurpose = (purpose) => {
+  if (purpose === OTP_PURPOSES.PASSWORD_RESET) {
+    return OTP_PURPOSES.PASSWORD_RESET;
+  }
+  return OTP_PURPOSES.EMAIL_VERIFICATION;
+};
+
 // Create a new OTP
-export const createOTP = async (userId) => {
+export const createOTP = async (userId, purpose = OTP_PURPOSES.EMAIL_VERIFICATION) => {
   try {
     const connection = await pool.getConnection();
+    const otpPurpose = normalizePurpose(purpose);
     
     // Mark previous unused OTP as expired
     const otp = generateOTP();
@@ -12,8 +25,8 @@ export const createOTP = async (userId) => {
     expiryTime.setMinutes(expiryTime.getMinutes() + (parseInt(process.env.OTP_EXPIRE_MINUTES) || 5));
 
     // Insert new OTP
-    const query = 'INSERT INTO otp_codes (user_id, otp_code, expires_at) VALUES (?, ?, ?)';
-    await connection.execute(query, [userId, otp, expiryTime]);
+    const query = 'INSERT INTO otp_codes (user_id, otp_code, purpose, expires_at) VALUES (?, ?, ?, ?)';
+    await connection.execute(query, [userId, otp, otpPurpose, expiryTime]);
 
     connection.release();
     return { success: true, otp };
@@ -24,16 +37,17 @@ export const createOTP = async (userId) => {
 };
 
 // Verify OTP
-export const verifyOTP = async (userId, otp) => {
+export const verifyOTP = async (userId, otp, purpose = OTP_PURPOSES.EMAIL_VERIFICATION) => {
   try {
     const connection = await pool.getConnection();
+    const otpPurpose = normalizePurpose(purpose);
 
     const query = `
       SELECT * FROM otp_codes 
-      WHERE user_id = ? AND otp_code = ? AND is_used = FALSE 
+      WHERE user_id = ? AND otp_code = ? AND purpose = ? AND is_used = FALSE 
       ORDER BY created_at DESC LIMIT 1
     `;
-    const [rows] = await connection.execute(query, [userId, otp]);
+    const [rows] = await connection.execute(query, [userId, otp, otpPurpose]);
 
     connection.release();
 
@@ -56,16 +70,17 @@ export const verifyOTP = async (userId, otp) => {
 };
 
 // Mark OTP as used
-export const markOTPAsUsed = async (userId, otp) => {
+export const markOTPAsUsed = async (userId, otp, purpose = OTP_PURPOSES.EMAIL_VERIFICATION) => {
   try {
     const connection = await pool.getConnection();
+    const otpPurpose = normalizePurpose(purpose);
 
     const query = `
       UPDATE otp_codes 
       SET is_used = TRUE 
-      WHERE user_id = ? AND otp_code = ? AND is_used = FALSE
+      WHERE user_id = ? AND otp_code = ? AND purpose = ? AND is_used = FALSE
     `;
-    await connection.execute(query, [userId, otp]);
+    await connection.execute(query, [userId, otp, otpPurpose]);
 
     connection.release();
     return { success: true };
@@ -129,16 +144,17 @@ export const updateLastOTPSentTime = async (userId) => {
 };
 
 // Get latest OTP for user
-export const getLatestOTP = async (userId) => {
+export const getLatestOTP = async (userId, purpose = OTP_PURPOSES.EMAIL_VERIFICATION) => {
   try {
     const connection = await pool.getConnection();
+    const otpPurpose = normalizePurpose(purpose);
 
     const query = `
       SELECT * FROM otp_codes 
-      WHERE user_id = ? 
+      WHERE user_id = ? AND purpose = ?
       ORDER BY created_at DESC LIMIT 1
     `;
-    const [rows] = await connection.execute(query, [userId]);
+    const [rows] = await connection.execute(query, [userId, otpPurpose]);
 
     connection.release();
 
@@ -152,3 +168,5 @@ export const getLatestOTP = async (userId) => {
     return { success: false, error: error.message };
   }
 };
+
+export { OTP_PURPOSES };

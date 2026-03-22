@@ -1,11 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import * as authService from '../services/authService'
+import { auth } from '../services/firebaseClient'
 import './AuthPages.css'
 
 function OTPVerificationPage() {
   const navigate = useNavigate()
-  const [userId, setUserId] = useState(null)
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [errors, setErrors] = useState({})
@@ -16,26 +16,17 @@ function OTPVerificationPage() {
   const [resendCooldown, setResendCooldown] = useState(0)
 
   useEffect(() => {
-    // Get userId from session storage (set during registration)
-    const storedUserId = sessionStorage.getItem('registrationUserId')
-    const storedEmail = sessionStorage.getItem('registrationEmail')
-    const unverifiedUserId = sessionStorage.getItem('unverifiedUserId')
+    const pendingEmail = sessionStorage.getItem('pendingRegistrationEmail') || auth.currentUser?.email || ''
+    setEmail(pendingEmail)
 
-    if (storedUserId) {
-      setUserId(parseInt(storedUserId))
-      setEmail(storedEmail || '')
-    } else if (unverifiedUserId) {
-      setUserId(parseInt(unverifiedUserId))
-    } else {
-      // Redirect to register if no userId
-      navigate('/register')
+    if (!auth.currentUser) {
+      navigate('/login', { replace: true })
     }
   }, [navigate])
 
-  // Countdown timer for resend button
   useEffect(() => {
     if (resendCooldown > 0) {
-      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000)
+      const timer = setTimeout(() => setResendCooldown((prev) => prev - 1), 1000)
       return () => clearTimeout(timer)
     }
   }, [resendCooldown])
@@ -50,7 +41,7 @@ function OTPVerificationPage() {
   function validateForm() {
     const nextErrors = {}
 
-    if (otp.length !== 6) {
+    if (!/^\d{6}$/.test(otp)) {
       nextErrors.otp = 'OTP must be 6 digits.'
     }
 
@@ -67,21 +58,13 @@ function OTPVerificationPage() {
       return
     }
 
-    if (!userId) {
-      setServerError('User ID not found. Please register again.')
-      return
-    }
-
     try {
       setLoading(true)
-      const response = await authService.verifyOTP(userId, otp)
+      const response = await authService.verifyRegistrationOTP(otp)
 
       if (response.success) {
-        setSuccessMessage('Email verified successfully! Redirecting to dashboard...')
-        sessionStorage.removeItem('registrationUserId')
-        sessionStorage.removeItem('registrationEmail')
-        sessionStorage.removeItem('unverifiedUserId')
-        setTimeout(() => navigate('/dashboard'), 1500)
+        setSuccessMessage('Email verified successfully! Redirecting...')
+        setTimeout(() => navigate('/dashboard', { replace: true }), 1200)
       } else {
         setServerError(response.message || 'OTP verification failed.')
       }
@@ -94,19 +77,14 @@ function OTPVerificationPage() {
   }
 
   async function handleResendOtp() {
-    if (!userId) {
-      setServerError('User ID not found.')
-      return
-    }
-
     try {
       setResendLoading(true)
-      const response = await authService.resendOTPCode(userId)
+      setServerError('')
+      const response = await authService.resendRegistrationOTP()
 
       if (response.success) {
-        setSuccessMessage('OTP sent to your email!')
-        setResendCooldown(60) // 60 second cooldown
-        setTimeout(() => setSuccessMessage(''), 3000)
+        setSuccessMessage('OTP sent to your email.')
+        setResendCooldown(60)
       } else {
         setServerError(response.message || 'Failed to resend OTP.')
       }
@@ -118,15 +96,11 @@ function OTPVerificationPage() {
     }
   }
 
-  if (!userId) {
-    return <div className="auth-shell"><p>Loading...</p></div>
-  }
-
   return (
     <section className="auth-shell">
       <div className="auth-card">
         <div className="auth-top-link">
-          <Link to="/">← Back to home</Link>
+          <Link to="/login">← Back to login</Link>
         </div>
 
         <div className="auth-brand">
@@ -135,9 +109,7 @@ function OTPVerificationPage() {
         </div>
 
         <h1 className="auth-title">Verify Your Email</h1>
-        <p className="auth-subtitle">
-          Enter the 6-digit code sent to {email || 'your email'}
-        </p>
+        <p className="auth-subtitle">Enter the OTP sent to {email || 'your email address'}.</p>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <div className="form-field">
@@ -165,16 +137,14 @@ function OTPVerificationPage() {
           </button>
 
           <div className="otp-footer">
-            <p>Didn't receive the code?</p>
+            <p>Didn\'t receive the code?</p>
             <button
               type="button"
               className="resend-button"
               onClick={handleResendOtp}
               disabled={resendLoading || resendCooldown > 0}
             >
-              {resendCooldown > 0
-                ? `Resend in ${resendCooldown}s`
-                : 'Resend OTP'}
+              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
             </button>
           </div>
         </form>

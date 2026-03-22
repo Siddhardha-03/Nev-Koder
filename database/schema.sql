@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(100) NOT NULL,
   email VARCHAR(100) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
+  firebase_uid VARCHAR(255) UNIQUE NULL,
+  auth_provider ENUM('legacy', 'firebase') NOT NULL DEFAULT 'legacy',
   role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
   is_verified BOOLEAN DEFAULT FALSE,
   last_otp_sent_at TIMESTAMP NULL,
@@ -16,6 +18,8 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_email (email),
+  INDEX idx_firebase_uid (firebase_uid),
+  INDEX idx_auth_provider (auth_provider),
   INDEX idx_is_verified (is_verified),
   INDEX idx_role (role)
 );
@@ -59,11 +63,13 @@ CREATE TABLE IF NOT EXISTS otp_codes (
   id INT PRIMARY KEY AUTO_INCREMENT,
   user_id INT NOT NULL,
   otp_code VARCHAR(6) NOT NULL,
+  purpose ENUM('email_verification', 'password_reset') NOT NULL DEFAULT 'email_verification',
   expires_at TIMESTAMP NOT NULL,
   is_used BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_user_id (user_id),
+  INDEX idx_otp_purpose (purpose),
   INDEX idx_expires_at (expires_at)
 );
 

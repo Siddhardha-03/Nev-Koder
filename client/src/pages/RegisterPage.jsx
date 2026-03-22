@@ -67,17 +67,39 @@ function RegisterPage() {
       )
 
       if (response.success) {
-        setSuccessMessage('Registration successful. Verify your email to continue.')
-        // Store userId in session storage for OTP page
-        sessionStorage.setItem('registrationUserId', response.userId)
-        sessionStorage.setItem('registrationEmail', response.email)
-        setTimeout(() => navigate('/verify-otp'), 1500)
+        setSuccessMessage('OTP sent to your email. Redirecting to verification...')
+        setTimeout(() => navigate('/verify-otp'), 1200)
       } else {
         setServerError(response.message || 'Registration failed. Please try again.')
       }
     } catch (error) {
       setServerError('Registration failed. Please try again.')
       console.error('Registration error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setSuccessMessage('')
+    setServerError('')
+
+    try {
+      setLoading(true)
+      const response = await authService.continueWithGoogle()
+
+      if (response.success) {
+        setSuccessMessage('Registration successful! Redirecting...')
+        setTimeout(() => navigate('/dashboard'), 1200)
+      } else if (response.requiresOtp) {
+        setSuccessMessage('OTP sent to your email. Redirecting to verification...')
+        setTimeout(() => navigate('/verify-otp'), 1200)
+      } else {
+        setServerError(response.message || 'Google sign-up failed. Please try again.')
+      }
+    } catch (error) {
+      setServerError('Google sign-up failed. Please try again.')
+      console.error('Google sign-up error:', error)
     } finally {
       setLoading(false)
     }
@@ -160,6 +182,17 @@ function RegisterPage() {
 
           <button className="auth-submit" type="submit" disabled={!canSubmit}>
             {loading ? 'Creating account...' : 'Create Account'}
+          </button>
+
+          <div className="auth-divider">or</div>
+
+          <button
+            className="auth-submit auth-submit-google"
+            type="button"
+            disabled={!canSubmit}
+            onClick={handleGoogleSignIn}
+          >
+            {loading ? 'Please wait...' : 'Continue With Google'}
           </button>
         </form>
 

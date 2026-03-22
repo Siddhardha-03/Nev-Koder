@@ -52,16 +52,40 @@ function LoginPage() {
       if (response.success) {
         setSuccessMessage('Login successful! Redirecting...')
         setTimeout(() => navigate('/', { replace: true }), 1500)
-      } else if (response.message && response.message.includes('verify')) {
-        setServerError('Please verify your email first.')
-        sessionStorage.setItem('unverifiedUserId', response.userId)
-        setTimeout(() => navigate('/verify-otp'), 2000)
+      } else if (response.requiresOtp) {
+        setServerError(response.message || 'Please verify your email with OTP first.')
+        setTimeout(() => navigate('/verify-otp'), 1200)
       } else {
         setServerError(response.message || 'Login failed. Please check your credentials.')
       }
     } catch (error) {
       setServerError('Login failed. Please check your credentials.')
       console.error('Login error:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setServerError('')
+    setSuccessMessage('')
+
+    try {
+      setLoading(true)
+      const response = await authService.continueWithGoogle()
+
+      if (response.success) {
+        setSuccessMessage('Login successful! Redirecting...')
+        setTimeout(() => navigate('/', { replace: true }), 1500)
+      } else if (response.requiresOtp) {
+        setServerError(response.message || 'Please verify your email with OTP first.')
+        setTimeout(() => navigate('/verify-otp'), 1200)
+      } else {
+        setServerError(response.message || 'Google sign-in failed.')
+      }
+    } catch (error) {
+      setServerError('Google sign-in failed. Please try again.')
+      console.error('Google sign-in error:', error)
     } finally {
       setLoading(false)
     }
@@ -120,6 +144,17 @@ function LoginPage() {
 
           <button className="auth-submit" type="submit" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+
+          <div className="auth-divider">or</div>
+
+          <button
+            className="auth-submit auth-submit-google"
+            type="button"
+            disabled={loading}
+            onClick={handleGoogleSignIn}
+          >
+            {loading ? 'Please wait...' : 'Continue With Google'}
           </button>
         </form>
 

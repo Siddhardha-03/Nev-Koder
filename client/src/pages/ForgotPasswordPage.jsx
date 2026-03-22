@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import * as authService from '../services/authService'
 import './AuthPages.css'
 
 function ForgotPasswordPage() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [errors, setErrors] = useState('')
   const [serverError, setServerError] = useState('')
@@ -38,8 +39,10 @@ function ForgotPasswordPage() {
       const response = await authService.forgotPassword(email.trim().toLowerCase())
 
       if (response.success) {
-        setSuccessMessage('If an account exists with this email, you will receive a password reset link.')
-        setEmail('')
+        setSuccessMessage('If your account exists, a 6-digit reset OTP has been sent.')
+        setTimeout(() => {
+          navigate(`/reset-password?email=${encodeURIComponent(email.trim().toLowerCase())}`)
+        }, 1000)
       } else {
         setServerError(response.message || 'Request failed.')
       }
@@ -64,7 +67,7 @@ function ForgotPasswordPage() {
         </div>
 
         <h1 className="auth-title">Forgot Password?</h1>
-        <p className="auth-subtitle">Enter your email to receive a password reset link.</p>
+        <p className="auth-subtitle">Enter your email to receive a password reset OTP.</p>
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
           <div className="form-field">
@@ -85,7 +88,7 @@ function ForgotPasswordPage() {
           {successMessage ? <div className="form-success">{successMessage}</div> : null}
 
           <button className="auth-submit" type="submit" disabled={loading}>
-            {loading ? 'Sending...' : 'Send Reset Link'}
+            {loading ? 'Sending...' : 'Send Reset OTP'}
           </button>
         </form>
 

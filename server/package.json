@@ -25,6 +25,7 @@
     "express-fileupload": "^1.5.2",
     "express-rate-limit": "^8.3.1",
     "express-validator": "^7.0.0",
+    "firebase-admin": "^13.7.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.6.5",
     "nodemailer": "^6.9.7",

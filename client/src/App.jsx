@@ -51,10 +51,10 @@ function App() {
         <Route path="/problems" element={<ProblemsPage />} />
         <Route path="/problems/:id" element={<ProblemPage />} />
         <Route path="/compiler" element={<CompilerPage />} />
-          <Route path="/learning-paths" element={<LearningPathPage />} />
-          <Route path="/learning-paths/:id" element={<LearningPathPage />} />
-          <Route path="/practice-sheets" element={<PracticeSheetsPage />} />
-          <Route path="/interview-prep" element={<InterviewPrepPage />} />
+        <Route path="/learning-paths" element={<LearningPathPage />} />
+        <Route path="/learning-paths/:id" element={<LearningPathPage />} />
+        <Route path="/practice-sheets" element={<PracticeSheetsPage />} />
+        <Route path="/interview-prep" element={<InterviewPrepPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-otp" element={<OTPVerificationPage />} />
