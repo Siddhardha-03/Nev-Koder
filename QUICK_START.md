@@ -163,7 +163,7 @@ Edit `server/.env` with:
 
 ## 🧪 Test the Flow
 
-1. **Register** with email: test@example.com
+1. **Register** with email: test@yourmail.com
 2. **Check email** for 6-digit OTP (sent via Gmail)
 3. **Enter OTP** to verify email
 4. **Login** with email and password

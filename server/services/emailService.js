@@ -3,124 +3,49 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const EMAIL_DELIVERY_MODES = {
-  SMTP: 'smtp',
-  LOG: 'log',
-  DISABLED: 'disabled'
+const getEmailDeliveryMode = () => {
+  const mode = String(process.env.EMAIL_DELIVERY_MODE || 'smtp').toLowerCase();
+  if (mode === 'disabled' || mode === 'log') return mode;
+  return 'smtp';
 };
 
-const normalizeDeliveryMode = (value) => {
-  const normalized = String(value || EMAIL_DELIVERY_MODES.SMTP).trim().toLowerCase();
-  if (Object.values(EMAIL_DELIVERY_MODES).includes(normalized)) {
-    return normalized;
-  }
-  return EMAIL_DELIVERY_MODES.SMTP;
-};
+const dispatchEmail = async ({ to, subject, html }) => {
+  const mode = getEmailDeliveryMode();
 
-const emailDeliveryMode = normalizeDeliveryMode(process.env.EMAIL_DELIVERY_MODE);
-
-const emailPort = Number(process.env.EMAIL_PORT || 587);
-const emailSecure = String(process.env.EMAIL_SECURE || '').toLowerCase() === 'true' || emailPort === 465;
-const emailTimeout = Number(process.env.EMAIL_TIMEOUT_MS || 10000);
-const hasSmtpConfig = Boolean(process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASSWORD);
-
-// Create transporter only when SMTP mode is active.
-const transporter = emailDeliveryMode === EMAIL_DELIVERY_MODES.SMTP
-  ? nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: emailPort,
-      secure: emailSecure,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-      },
-      connectionTimeout: emailTimeout,
-      greetingTimeout: emailTimeout,
-      socketTimeout: emailTimeout
-    })
-  : null;
-
-export const getEmailDeliveryMode = () => emailDeliveryMode;
-
-const dispatchEmail = async ({ to, subject, html, label, otp }) => {
-  if (emailDeliveryMode === EMAIL_DELIVERY_MODES.DISABLED) {
-    return {
-      success: false,
-      deliveryMode: emailDeliveryMode,
-      message: 'Email delivery is disabled by configuration.'
-    };
+  if (mode === 'disabled') {
+    console.log(`[email:${mode}] Skipped outbound email`, { to, subject });
+    return { success: true, message: 'Email delivery disabled by configuration' };
   }
 
-  if (emailDeliveryMode === EMAIL_DELIVERY_MODES.LOG) {
-    console.log(`[email:${label}] mode=log to=${to} subject="${subject}" otp=${otp || 'n/a'}`);
-    return {
-      success: true,
-      deliveryMode: emailDeliveryMode,
-      message: 'OTP generated successfully. Email is in log mode for local development.'
-    };
-  }
-
-  if (!hasSmtpConfig || !transporter) {
-    return {
-      success: false,
-      deliveryMode: emailDeliveryMode,
-      message: 'SMTP configuration is incomplete. Set EMAIL_HOST, EMAIL_USER, and EMAIL_PASSWORD.'
-    };
-  }
-
-  try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+  if (mode === 'log') {
+    console.log(`[email:${mode}] Email captured`, {
       to,
       subject,
-      html
+      preview: String(html || '').slice(0, 180)
     });
-
-    return {
-      success: true,
-      deliveryMode: emailDeliveryMode,
-      message: 'Email sent successfully.'
-    };
-  } catch (error) {
-    console.error(`Email send error [${label}]:`, error);
-    return {
-      success: false,
-      deliveryMode: emailDeliveryMode,
-      message: 'Failed to send email',
-      error: error.message
-    };
+    return { success: true, message: 'Email logged only (not sent)' };
   }
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    html
+  });
+
+  return { success: true, message: 'Email sent successfully' };
 };
 
-export const verifyEmailTransporter = async () => {
-  if (emailDeliveryMode === EMAIL_DELIVERY_MODES.LOG) {
-    return {
-      success: true,
-      message: 'Email delivery mode is LOG. OTPs will be printed in server logs.'
-    };
+// Create transporter
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
   }
-
-  if (emailDeliveryMode === EMAIL_DELIVERY_MODES.DISABLED) {
-    return {
-      success: false,
-      message: 'Email delivery mode is DISABLED. OTP email flows will not work.'
-    };
-  }
-
-  if (!hasSmtpConfig || !transporter) {
-    return {
-      success: false,
-      message: 'Email configuration is incomplete. Set EMAIL_HOST, EMAIL_USER, and EMAIL_PASSWORD.'
-    };
-  }
-
-  try {
-    await transporter.verify();
-    return { success: true, message: 'SMTP connection verified' };
-  } catch (error) {
-    return { success: false, message: `SMTP verification failed: ${error.message}` };
-  }
-};
+});
 
 // Send OTP email
 export const sendOTPEmail = async (email, otp, name) => {
@@ -143,13 +68,11 @@ export const sendOTPEmail = async (email, otp, name) => {
     return await dispatchEmail({
       to: email,
       subject: 'Your OTP for nev-koder Email Verification',
-      html: htmlContent,
-      label: 'registration-otp',
-      otp
+      html: htmlContent
     });
   } catch (error) {
     console.error('Email send error:', error);
-    return { success: false, deliveryMode: emailDeliveryMode, message: 'Failed to send email', error: error.message };
+    return { success: false, message: 'Failed to send email', error: error.message };
   }
 };
 
@@ -174,13 +97,11 @@ export const sendPasswordResetOTPEmail = async (email, otp, name) => {
     return await dispatchEmail({
       to: email,
       subject: 'Your OTP for nev-koder Password Reset',
-      html: htmlContent,
-      label: 'password-reset-otp',
-      otp
+      html: htmlContent
     });
   } catch (error) {
     console.error('Email send error:', error);
-    return { success: false, deliveryMode: emailDeliveryMode, message: 'Failed to send email', error: error.message };
+    return { success: false, message: 'Failed to send email', error: error.message };
   }
 };
 
@@ -207,12 +128,11 @@ export const sendPasswordResetEmail = async (email, resetToken, name) => {
     return await dispatchEmail({
       to: email,
       subject: 'Reset Your nev-koder Password',
-      html: htmlContent,
-      label: 'password-reset-link'
+      html: htmlContent
     });
   } catch (error) {
     console.error('Email send error:', error);
-    return { success: false, deliveryMode: emailDeliveryMode, message: 'Failed to send email', error: error.message };
+    return { success: false, message: 'Failed to send email', error: error.message };
   }
 };
 
@@ -242,12 +162,11 @@ export const sendWelcomeEmail = async (email, name) => {
     return await dispatchEmail({
       to: email,
       subject: 'Welcome to nev-koder!',
-      html: htmlContent,
-      label: 'welcome'
+      html: htmlContent
     });
   } catch (error) {
     console.error('Email send error:', error);
-    return { success: false, deliveryMode: emailDeliveryMode, message: 'Failed to send email', error: error.message };
+    return { success: false, message: 'Failed to send email', error: error.message };
   }
 };
 

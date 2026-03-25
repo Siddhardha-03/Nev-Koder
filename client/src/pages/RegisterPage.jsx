@@ -67,10 +67,7 @@ function RegisterPage() {
       )
 
       if (response.success) {
-        const nextMessage = response.deliveryMode === 'log'
-          ? 'OTP generated in local log mode. Check backend logs for the OTP, then continue verification...'
-          : (response.message || 'OTP sent to your email. Redirecting to verification...')
-        setSuccessMessage(nextMessage)
+        setSuccessMessage('OTP sent to your email. Redirecting to verification...')
         setTimeout(() => navigate('/verify-otp'), 1200)
       } else {
         setServerError(response.message || 'Registration failed. Please try again.')
@@ -78,34 +75,6 @@ function RegisterPage() {
     } catch (error) {
       setServerError('Registration failed. Please try again.')
       console.error('Registration error:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleGoogleSignIn() {
-    setSuccessMessage('')
-    setServerError('')
-
-    try {
-      setLoading(true)
-      const response = await authService.continueWithGoogle()
-
-      if (response.success) {
-        setSuccessMessage('Registration successful! Redirecting...')
-        setTimeout(() => navigate('/dashboard'), 1200)
-      } else if (response.requiresOtp) {
-        const nextMessage = response.deliveryMode === 'log'
-          ? 'OTP generated in local log mode. Check backend logs for the OTP, then continue verification...'
-          : (response.message || 'OTP sent to your email. Redirecting to verification...')
-        setSuccessMessage(nextMessage)
-        setTimeout(() => navigate('/verify-otp'), 1200)
-      } else {
-        setServerError(response.message || 'Google sign-up failed. Please try again.')
-      }
-    } catch (error) {
-      setServerError('Google sign-up failed. Please try again.')
-      console.error('Google sign-up error:', error)
     } finally {
       setLoading(false)
     }
@@ -149,7 +118,7 @@ function RegisterPage() {
               type="email"
               value={form.email}
               onChange={handleInputChange}
-              placeholder="you@example.com"
+              placeholder="you@yourmail.com"
               autoComplete="email"
             />
             {errors.email ? <p className="input-error">{errors.email}</p> : null}
@@ -190,16 +159,6 @@ function RegisterPage() {
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
 
-          <div className="auth-divider">or</div>
-
-          <button
-            className="auth-submit auth-submit-google"
-            type="button"
-            disabled={!canSubmit}
-            onClick={handleGoogleSignIn}
-          >
-            {loading ? 'Please wait...' : 'Continue With Google'}
-          </button>
         </form>
 
         <div className="auth-footer">

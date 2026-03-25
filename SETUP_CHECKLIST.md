@@ -125,7 +125,7 @@
 - [ ] Redirects to /register page
 - [ ] Fill form:
   - Name: "Test User"
-  - Email: "test@example.com" (YOUR EMAIL for receiving OTP)
+  - Email: "test@yourmail.com" (YOUR EMAIL for receiving OTP)
   - Password: "Test123"
   - Confirm: "Test123"
 - [ ] Click "Create Account"
@@ -136,7 +136,7 @@
 
 ### Test 5.2: OTP Verification
 - [ ] Page should redirect to /verify-otp
-- [ ] Should show: "Enter the 6-digit code sent to test@example.com"
+- [ ] Should show: "Enter the 6-digit code sent to test@yourmail.com"
 - [ ] Copy OTP from email
 - [ ] Paste 6 digits into OTP input field
 - [ ] Click "Verify Email"
@@ -146,7 +146,7 @@
 ### Test 5.3: Login
 - [ ] Navigate to http://localhost:5173/login
 - [ ] Fill form:
-  - Email: "test@example.com"
+  - Email: "test@yourmail.com"
   - Password: "Test123"
 - [ ] Click "Sign In"
 - [ ] Should show: "Login successful!"
@@ -154,7 +154,7 @@
 
 ### Test 5.4: Password Reset
 - [ ] Go to http://localhost:5173/forgot-password
-- [ ] Enter: "test@example.com"
+- [ ] Enter: "test@yourmail.com"
 - [ ] Click "Send Reset Link"
 - [ ] Should show: "If email exists, reset link will be sent"
 - [ ] **Check your email** for reset link

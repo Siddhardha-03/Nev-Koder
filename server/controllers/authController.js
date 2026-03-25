@@ -1,10 +1,10 @@
 import pool from '../config/database.js';
 import bcrypt from 'bcryptjs';
-import { generateOTP } from '../utils/otp.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
-import { sendOTPEmail, sendWelcomeEmail, sendPasswordResetEmail } from '../services/emailService.js';
+import { sendOTPEmail, sendWelcomeEmail, sendPasswordResetOTPEmail } from '../services/emailService.js';
 import { createOTP, verifyOTP, markOTPAsUsed, checkOTPResendCooldown, updateLastOTPSentTime } from '../services/otpService.js';
-import { v4 as uuidv4 } from 'uuid';
+
+const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 
 // Helper: Check if account is locked
 const checkAccountLock = async (userId) => {
@@ -54,9 +54,10 @@ const lockAccount = async (userId) => {
 export const register = async (req, res) => {
   try {
     const { name, email, password, confirmPassword } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
     // Validation
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !normalizedEmail || !password || !confirmPassword) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
@@ -70,14 +71,14 @@ export const register = async (req, res) => {
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
       return res.status(400).json({ success: false, message: 'Invalid email format' });
     }
 
     const connection = await pool.getConnection();
 
     // Check if email already exists
-    const [existingUsers] = await connection.execute('SELECT id FROM users WHERE email = ?', [email]);
+    const [existingUsers] = await connection.execute('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
 
     if (existingUsers.length > 0) {
       connection.release();
@@ -90,7 +91,7 @@ export const register = async (req, res) => {
 
     // Create user
     const insertQuery = 'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)';
-    const [result] = await connection.execute(insertQuery, [name, email, passwordHash, 'user']);
+    const [result] = await connection.execute(insertQuery, [name, normalizedEmail, passwordHash, 'user']);
 
     const userId = result.insertId;
 
@@ -105,7 +106,7 @@ export const register = async (req, res) => {
     await updateLastOTPSentTime(userId);
 
     // Send OTP email
-    const emailResult = await sendOTPEmail(email, otpResult.otp, name);
+    const emailResult = await sendOTPEmail(normalizedEmail, otpResult.otp, name);
 
     connection.release();
 
@@ -118,7 +119,7 @@ export const register = async (req, res) => {
       success: true,
       message: 'Registration successful. Please check your email for OTP.',
       userId,
-      email
+      email: normalizedEmail
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -259,15 +260,16 @@ export const resendOTP = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
-    if (!email || !password) {
+    if (!normalizedEmail || !password) {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
     const connection = await pool.getConnection();
 
     // Get user
-    const [users] = await connection.execute('SELECT * FROM users WHERE email = ?', [email]);
+    const [users] = await connection.execute('SELECT * FROM users WHERE email = ?', [normalizedEmail]);
 
     if (users.length === 0) {
       connection.release();
@@ -275,14 +277,6 @@ export const login = async (req, res) => {
     }
 
     const user = users[0];
-
-    if (user.auth_provider === 'firebase' && user.firebase_uid) {
-      connection.release();
-      return res.status(403).json({
-        success: false,
-        message: 'This account uses Firebase sign-in. Please continue with Firebase login.'
-      });
-    }
 
     // Check if user is verified
     if (!user.is_verified) {
@@ -369,45 +363,40 @@ export const login = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
-    if (!email) {
+    if (!normalizedEmail) {
       return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
     const connection = await pool.getConnection();
 
-    // Get user
-    const [users] = await connection.execute('SELECT * FROM users WHERE email = ?', [email]);
+    try {
+      const [users] = await connection.execute('SELECT * FROM users WHERE email = ?', [normalizedEmail]);
 
-    if (users.length === 0) {
-      // Don't reveal if email exists (security)
+      if (users.length === 0) {
+        // Do not reveal account existence.
+        return res.status(200).json({ success: true, message: 'If email exists, reset OTP will be sent' });
+      }
+
+      const user = users[0];
+
+      const otpResult = await createOTP(user.id);
+      if (!otpResult.success) {
+        return res.status(500).json({ success: false, message: 'Failed to generate reset OTP' });
+      }
+
+      await updateLastOTPSentTime(user.id);
+
+      const emailResult = await sendPasswordResetOTPEmail(user.email, otpResult.otp, user.name);
+      if (!emailResult.success) {
+        return res.status(500).json({ success: false, message: 'Failed to send reset OTP' });
+      }
+
+      return res.status(200).json({ success: true, message: 'If email exists, reset OTP will be sent' });
+    } finally {
       connection.release();
-      return res.status(200).json({ success: true, message: 'If email exists, reset link will be sent' });
     }
-
-    const user = users[0];
-
-    // Generate reset token
-    const resetToken = uuidv4();
-    const expiryTime = new Date();
-    expiryTime.setHours(expiryTime.getHours() + 1); // 1 hour expiry
-
-    // Save reset token
-    await connection.execute(
-      'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
-      [user.id, resetToken, expiryTime]
-    );
-
-    connection.release();
-
-    // Send reset email
-    const emailResult = await sendPasswordResetEmail(user.email, resetToken, user.name);
-
-    if (!emailResult.success) {
-      return res.status(500).json({ success: false, message: 'Failed to send reset email' });
-    }
-
-    res.status(200).json({ success: true, message: 'If email exists, reset link will be sent' });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ success: false, message: 'Forgot password failed', error: error.message });
@@ -417,9 +406,10 @@ export const forgotPassword = async (req, res) => {
 // Reset password
 export const resetPassword = async (req, res) => {
   try {
-    const { token, newPassword, confirmPassword } = req.body;
+    const { email, otp, newPassword, confirmPassword } = req.body;
+    const normalizedEmail = normalizeEmail(email);
 
-    if (!token || !newPassword || !confirmPassword) {
+    if (!normalizedEmail || !otp || !newPassword || !confirmPassword) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
@@ -432,38 +422,30 @@ export const resetPassword = async (req, res) => {
     }
 
     const connection = await pool.getConnection();
+    try {
+      const [users] = await connection.execute('SELECT * FROM users WHERE email = ?', [normalizedEmail]);
 
-    // Get reset token
-    const [tokens] = await connection.execute(
-      'SELECT * FROM password_reset_tokens WHERE token = ? AND is_used = FALSE',
-      [token]
-    );
+      if (users.length === 0) {
+        return res.status(400).json({ success: false, message: 'Invalid OTP or email' });
+      }
 
-    if (tokens.length === 0) {
+      const user = users[0];
+
+      const verifyResult = await verifyOTP(user.id, otp);
+      if (!verifyResult.success) {
+        return res.status(400).json({ success: false, message: verifyResult.message || 'Invalid OTP' });
+      }
+
+      const saltRounds = 10;
+      const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+
+      await connection.execute('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, user.id]);
+      await markOTPAsUsed(user.id, otp);
+
+      return res.status(200).json({ success: true, message: 'Password reset successful' });
+    } finally {
       connection.release();
-      return res.status(400).json({ success: false, message: 'Invalid reset token' });
     }
-
-    const resetToken = tokens[0];
-
-    // Check if token is expired
-    if (new Date() > new Date(resetToken.expires_at)) {
-      connection.release();
-      return res.status(400).json({ success: false, message: 'Reset token has expired' });
-    }
-
-    // Update password
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(newPassword, saltRounds);
-
-    await connection.execute('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, resetToken.user_id]);
-
-    // Mark token as used
-    await connection.execute('UPDATE password_reset_tokens SET is_used = TRUE WHERE id = ?', [resetToken.id]);
-
-    connection.release();
-
-    res.status(200).json({ success: true, message: 'Password reset successful' });
   } catch (error) {
     console.error('Reset password error:', error);
     res.status(500).json({ success: false, message: 'Password reset failed', error: error.message });

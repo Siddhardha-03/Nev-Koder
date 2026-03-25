@@ -1,11 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import * as authService from '../services/authService'
-import { auth } from '../services/firebaseClient'
 import './AuthPages.css'
 
 function OTPVerificationPage() {
   const navigate = useNavigate()
+
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [errors, setErrors] = useState({})
@@ -15,20 +15,23 @@ function OTPVerificationPage() {
   const [resendLoading, setResendLoading] = useState(false)
   const [resendCooldown, setResendCooldown] = useState(0)
 
+  const canVerify = useMemo(() => !loading && otp.length === 6, [loading, otp.length])
+
   useEffect(() => {
-    const pendingEmail = sessionStorage.getItem('pendingRegistrationEmail') || auth.currentUser?.email || ''
+    const pendingEmail = sessionStorage.getItem('pendingRegistrationEmail') || ''
     setEmail(pendingEmail)
-
-    if (!auth.currentUser) {
-      navigate('/login', { replace: true })
-    }
-  }, [navigate])
+  }, [])
 
   useEffect(() => {
-    if (resendCooldown > 0) {
-      const timer = setTimeout(() => setResendCooldown((prev) => prev - 1), 1000)
-      return () => clearTimeout(timer)
+    if (resendCooldown <= 0) {
+      return
     }
+
+    const timer = setTimeout(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1))
+    }, 1000)
+
+    return () => clearTimeout(timer)
   }, [resendCooldown])
 
   function handleOtpChange(event) {
@@ -77,16 +80,23 @@ function OTPVerificationPage() {
   }
 
   async function handleResendOtp() {
+    setServerError('')
+    setSuccessMessage('')
+
     try {
       setResendLoading(true)
-      setServerError('')
       const response = await authService.resendRegistrationOTP()
 
       if (response.success) {
-        setSuccessMessage(response.message || 'OTP sent successfully.')
+        setSuccessMessage(response.message || 'OTP sent to your email.')
         setResendCooldown(60)
       } else {
         setServerError(response.message || 'Failed to resend OTP.')
+
+        const waitMatch = String(response.message || '').match(/wait\s+(\d+)\s+seconds/i)
+        if (waitMatch) {
+          setResendCooldown(Number(waitMatch[1]))
+        }
       }
     } catch (error) {
       setServerError('Failed to resend OTP.')
@@ -132,19 +142,19 @@ function OTPVerificationPage() {
           {serverError ? <div className="form-error">{serverError}</div> : null}
           {successMessage ? <div className="form-success">{successMessage}</div> : null}
 
-          <button className="auth-submit" type="submit" disabled={loading || otp.length !== 6}>
+          <button className="auth-submit" type="submit" disabled={!canVerify}>
             {loading ? 'Verifying...' : 'Verify Email'}
           </button>
 
           <div className="otp-footer">
-            <p>Didn\'t receive the code?</p>
+            <p>Didn't receive the code?</p>
             <button
               type="button"
               className="resend-button"
               onClick={handleResendOtp}
               disabled={resendLoading || resendCooldown > 0}
             >
-              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
+              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : (resendLoading ? 'Sending...' : 'Resend OTP')}
             </button>
           </div>
         </form>

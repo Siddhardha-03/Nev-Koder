@@ -1,13 +1,4 @@
 import axios from 'axios';
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  updateProfile,
-  signOut
-} from 'firebase/auth';
-import { auth, firebaseConfigError } from './firebaseClient';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -67,84 +58,6 @@ const persistAuthState = (response) => {
   localStorage.setItem('user', JSON.stringify(response.user));
 };
 
-const syncFirebaseSession = async (firebaseIdToken) => {
-  const response = await api.post(
-    '/auth/firebase/sync',
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${firebaseIdToken}`
-      }
-    }
-  );
-
-  if (response.data.success) {
-    persistAuthState(response.data);
-  }
-
-  return response.data;
-};
-
-const postWithFirebaseToken = async (path, payload = {}) => {
-  const readinessError = ensureFirebaseReady();
-  if (readinessError) {
-    return readinessError;
-  }
-
-  const currentUser = auth.currentUser;
-  if (!currentUser) {
-    return {
-      success: false,
-      message: 'Firebase session expired. Please sign in again.'
-    };
-  }
-
-  const idToken = await currentUser.getIdToken(true);
-  const response = await api.post(path, payload, {
-    headers: {
-      Authorization: `Bearer ${idToken}`
-    }
-  });
-
-  return response.data;
-};
-
-const ensureFirebaseReady = () => {
-  if (!auth) {
-    return {
-      success: false,
-      message: firebaseConfigError || 'Firebase is not configured.'
-    };
-  }
-  return null;
-};
-
-const mapFirebaseAuthError = (error, fallbackMessage) => {
-  const code = error?.code || '';
-
-  if (code === 'auth/email-already-in-use') {
-    return 'This email is already in use. Please sign in instead.';
-  }
-
-  if (code === 'auth/invalid-email') {
-    return 'Please enter a valid email address.';
-  }
-
-  if (code === 'auth/weak-password') {
-    return 'Password is too weak. Use at least 6 characters.';
-  }
-
-  if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
-    return 'Invalid email or password.';
-  }
-
-  if (code === 'auth/popup-closed-by-user') {
-    return 'Google sign-in was cancelled.';
-  }
-
-  return error?.response?.data?.message || error?.message || fallbackMessage;
-};
-
 // Auth Service Functions
 
 /**
@@ -157,40 +70,23 @@ const mapFirebaseAuthError = (error, fallbackMessage) => {
  */
 export const registerUser = async (name, email, password, confirmPassword) => {
   try {
-    const readinessError = ensureFirebaseReady();
-    if (readinessError) {
-      return readinessError;
+    const response = await api.post('/auth/register', {
+      name,
+      email,
+      password,
+      confirmPassword
+    });
+
+    if (response.data.success) {
+      sessionStorage.setItem('registrationUserId', String(response.data.userId));
+      sessionStorage.setItem('registrationEmail', response.data.email || email);
     }
 
-    if (password !== confirmPassword) {
-      return {
-        success: false,
-        message: 'Passwords do not match.'
-      };
-    }
-
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
-    if (name?.trim()) {
-      await updateProfile(credential.user, { displayName: name.trim() });
-    }
-
-    const otpResponse = await postWithFirebaseToken('/auth/firebase/register/request-otp');
-    if (otpResponse.success) {
-      sessionStorage.setItem('pendingRegistrationEmail', email);
-      return {
-        success: true,
-        requiresOtp: true,
-        deliveryMode: otpResponse.deliveryMode,
-        email,
-        message: otpResponse.message || 'OTP sent successfully'
-      };
-    }
-
-    return otpResponse;
+    return response.data;
   } catch (error) {
     return {
       success: false,
-      message: mapFirebaseAuthError(error, 'Registration failed. Please try again.'),
+      message: error.response?.data?.message || 'Registration failed. Please try again.',
       error: error.message
     };
   }
@@ -204,49 +100,20 @@ export const registerUser = async (name, email, password, confirmPassword) => {
  */
 export const loginUser = async (email, password) => {
   try {
-    const readinessError = ensureFirebaseReady();
-    if (readinessError) {
-      return readinessError;
+    const response = await api.post('/auth/login', {
+      email,
+      password
+    });
+
+    if (response.data.success) {
+      persistAuthState(response.data);
     }
 
-    const credential = await signInWithEmailAndPassword(auth, email, password);
-    const idToken = await credential.user.getIdToken();
-    const syncResponse = await syncFirebaseSession(idToken);
-    if (!syncResponse.success && syncResponse.requiresOtp) {
-      sessionStorage.setItem('pendingRegistrationEmail', email);
-    }
-    return syncResponse;
+    return response.data;
   } catch (error) {
     return {
       success: false,
-      message: mapFirebaseAuthError(error, 'Login failed. Please check your credentials.'),
-      error: error.message
-    };
-  }
-};
-
-const googleProvider = new GoogleAuthProvider();
-
-export const continueWithGoogle = async () => {
-  try {
-    const readinessError = ensureFirebaseReady();
-    if (readinessError) {
-      return readinessError;
-    }
-
-    const credential = await signInWithPopup(auth, googleProvider);
-    const idToken = await credential.user.getIdToken(true);
-    const syncResponse = await syncFirebaseSession(idToken);
-
-    if (!syncResponse.success && syncResponse.requiresOtp) {
-      sessionStorage.setItem('pendingRegistrationEmail', credential.user.email || '');
-    }
-
-    return syncResponse;
-  } catch (error) {
-    return {
-      success: false,
-      message: mapFirebaseAuthError(error, 'Google sign-in failed. Please try again.'),
+      message: error.response?.data?.message || 'Login failed. Please check your credentials.',
       error: error.message
     };
   }
@@ -301,13 +168,21 @@ export const resetPasswordWithOTP = async (email, otp, newPassword, confirmPassw
 export const resetPassword = resetPasswordWithOTP;
 
 export const verifyRegistrationOTP = async (otp) => {
+  const userId = Number(sessionStorage.getItem('registrationUserId') || sessionStorage.getItem('unverifiedUserId') || 0);
+
+  if (!userId) {
+    return { success: false, message: 'User ID not found. Please register or login again.' };
+  }
+
   try {
-    const response = await postWithFirebaseToken('/auth/firebase/register/verify-otp', { otp });
-    if (response.success) {
-      persistAuthState(response);
-      sessionStorage.removeItem('pendingRegistrationEmail');
+    const response = await api.post('/auth/verify-otp', { userId, otp });
+    if (response.data.success) {
+      persistAuthState(response.data);
+      sessionStorage.removeItem('registrationUserId');
+      sessionStorage.removeItem('registrationEmail');
+      sessionStorage.removeItem('unverifiedUserId');
     }
-    return response;
+    return response.data;
   } catch (error) {
     return {
       success: false,
@@ -318,8 +193,15 @@ export const verifyRegistrationOTP = async (otp) => {
 };
 
 export const resendRegistrationOTP = async () => {
+  const userId = Number(sessionStorage.getItem('registrationUserId') || sessionStorage.getItem('unverifiedUserId') || 0);
+
+  if (!userId) {
+    return { success: false, message: 'User ID not found. Please register or login again.' };
+  }
+
   try {
-    return await postWithFirebaseToken('/auth/firebase/register/resend-otp');
+    const response = await api.post('/auth/resend-otp', { userId });
+    return response.data;
   } catch (error) {
     return {
       success: false,
@@ -383,9 +265,6 @@ export const getDashboardStats = async () => {
  * Logout user (clear local storage)
  */
 export const logout = () => {
-  if (auth) {
-    signOut(auth).catch(() => {});
-  }
   localStorage.removeItem('accessToken');
   localStorage.removeItem('user');
 };
@@ -410,7 +289,6 @@ export const getStoredUser = () => {
 export default {
   registerUser,
   loginUser,
-  continueWithGoogle,
   verifyRegistrationOTP,
   resendRegistrationOTP,
   forgotPassword,

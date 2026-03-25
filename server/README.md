@@ -141,7 +141,7 @@ Request:
 ```json
 {
   "name": "John Doe",
-  "email": "john@example.com",
+  "email": "john@yourmail.com",
   "password": "SecurePass123",
   "confirmPassword": "SecurePass123"
 }
@@ -153,7 +153,7 @@ Response:
   "success": true,
   "message": "Registration successful. Please check your email for OTP.",
   "userId": 1,
-  "email": "john@example.com"
+  "email": "john@yourmail.com"
 }
 ```
 
@@ -183,7 +183,7 @@ Response:
   "user": {
     "id": 1,
     "name": "John Doe",
-    "email": "john@example.com"
+    "email": "john@yourmail.com"
   }
 }
 ```
@@ -225,7 +225,7 @@ Error Responses:
 Request:
 ```json
 {
-  "email": "john@example.com",
+  "email": "john@yourmail.com",
   "password": "SecurePass123"
 }
 ```
@@ -239,7 +239,7 @@ Response:
   "user": {
     "id": 1,
     "name": "John Doe",
-    "email": "john@example.com"
+    "email": "john@yourmail.com"
   }
 }
 ```
@@ -258,7 +258,7 @@ Error Responses:
 Request:
 ```json
 {
-  "email": "john@example.com"
+  "email": "john@yourmail.com"
 }
 ```
 
@@ -330,7 +330,7 @@ Response:
   "success": true,
   "user": {
     "id": 1,
-    "email": "john@example.com"
+    "email": "john@yourmail.com"
   }
 }
 ```

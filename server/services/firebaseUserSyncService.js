@@ -17,8 +17,6 @@ export const syncFirebaseUserToDatabase = async (decodedToken) => {
     const uid = decodedToken.uid;
     const email = String(decodedToken.email || '').trim().toLowerCase();
     const name = normalizeName(decodedToken);
-    const signInProvider = decodedToken.firebase?.sign_in_provider || 'unknown';
-    const isGoogleProvider = signInProvider === 'google.com';
 
     if (!uid || !email) {
       throw new Error('Firebase token missing uid or email');
@@ -31,7 +29,7 @@ export const syncFirebaseUserToDatabase = async (decodedToken) => {
 
     if (usersByUid.length > 0) {
       const existing = usersByUid[0];
-      const nextVerifiedState = isGoogleProvider ? true : Boolean(existing.is_verified);
+      const nextVerifiedState = Boolean(existing.is_verified);
       await connection.execute(
         `UPDATE users
          SET name = ?, email = ?, is_verified = ?, auth_provider = 'firebase', updated_at = CURRENT_TIMESTAMP
@@ -50,7 +48,7 @@ export const syncFirebaseUserToDatabase = async (decodedToken) => {
 
     if (usersByEmail.length > 0) {
       const existing = usersByEmail[0];
-      const nextVerifiedState = isGoogleProvider ? true : Boolean(existing.is_verified);
+      const nextVerifiedState = Boolean(existing.is_verified);
       await connection.execute(
         `UPDATE users
          SET firebase_uid = ?, name = ?, is_verified = ?, auth_provider = 'firebase', updated_at = CURRENT_TIMESTAMP
@@ -66,7 +64,7 @@ export const syncFirebaseUserToDatabase = async (decodedToken) => {
     const [insertResult] = await connection.execute(
       `INSERT INTO users (name, email, password_hash, role, is_verified, firebase_uid, auth_provider)
        VALUES (?, ?, ?, 'user', ?, ?, 'firebase')`,
-      [name, email, randomPassword, isGoogleProvider, uid]
+      [name, email, randomPassword, false, uid]
     );
 
     const [newRows] = await connection.execute('SELECT * FROM users WHERE id = ? LIMIT 1', [insertResult.insertId]);

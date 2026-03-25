@@ -78,7 +78,7 @@ function ForgotPasswordPage() {
               type="email"
               value={email}
               onChange={handleInputChange}
-              placeholder="you@example.com"
+              placeholder="you@yourmail.com"
               autoComplete="email"
             />
             {errors ? <p className="input-error">{errors}</p> : null}
