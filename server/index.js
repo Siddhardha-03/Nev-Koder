@@ -10,7 +10,7 @@ import learningPathRoutes from './routes/learningPaths.js';
 import { corsMiddleware, errorHandler } from './middlewares/authMiddleware.js';
 import pool from './config/database.js';
 import { isFirebaseInitialized } from './firebaseAdmin.js';
-import { verifyEmailTransporter } from './services/emailService.js';
+import { verifyEmailTransporter, getEmailDeliveryMode } from './services/emailService.js';
 
 dotenv.config();
 
@@ -40,6 +40,7 @@ app.get('/health', (req, res) => {
     services: {
       firebaseAuthEnabled: String(process.env.FIREBASE_AUTH_ENABLED || 'false').toLowerCase() === 'true',
       firebaseInitialized: isFirebaseInitialized,
+      emailDeliveryMode: getEmailDeliveryMode(),
       emailHostConfigured: Boolean(process.env.EMAIL_HOST),
       emailUserConfigured: Boolean(process.env.EMAIL_USER)
     }

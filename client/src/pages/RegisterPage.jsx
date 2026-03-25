@@ -67,7 +67,10 @@ function RegisterPage() {
       )
 
       if (response.success) {
-        setSuccessMessage('OTP sent to your email. Redirecting to verification...')
+        const nextMessage = response.deliveryMode === 'log'
+          ? 'OTP generated in local log mode. Check backend logs for the OTP, then continue verification...'
+          : (response.message || 'OTP sent to your email. Redirecting to verification...')
+        setSuccessMessage(nextMessage)
         setTimeout(() => navigate('/verify-otp'), 1200)
       } else {
         setServerError(response.message || 'Registration failed. Please try again.')
@@ -92,7 +95,10 @@ function RegisterPage() {
         setSuccessMessage('Registration successful! Redirecting...')
         setTimeout(() => navigate('/dashboard'), 1200)
       } else if (response.requiresOtp) {
-        setSuccessMessage('OTP sent to your email. Redirecting to verification...')
+        const nextMessage = response.deliveryMode === 'log'
+          ? 'OTP generated in local log mode. Check backend logs for the OTP, then continue verification...'
+          : (response.message || 'OTP sent to your email. Redirecting to verification...')
+        setSuccessMessage(nextMessage)
         setTimeout(() => navigate('/verify-otp'), 1200)
       } else {
         setServerError(response.message || 'Google sign-up failed. Please try again.')

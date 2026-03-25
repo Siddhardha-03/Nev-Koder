@@ -1,5 +1,8 @@
 # nev-koder Authentication System - Complete Setup & Integration Guide
 
+> Legacy note: this document contains older non-Firebase flows in some sections.
+> Use `AUTH_DEPLOY_READY.md` as the source of truth for the current Firebase + OTP deployment flow.
+
 ## 🎯 What Has Been Built
 
 ### Backend (Node.js + Express)

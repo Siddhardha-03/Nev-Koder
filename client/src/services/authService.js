@@ -119,6 +119,32 @@ const ensureFirebaseReady = () => {
   return null;
 };
 
+const mapFirebaseAuthError = (error, fallbackMessage) => {
+  const code = error?.code || '';
+
+  if (code === 'auth/email-already-in-use') {
+    return 'This email is already in use. Please sign in instead.';
+  }
+
+  if (code === 'auth/invalid-email') {
+    return 'Please enter a valid email address.';
+  }
+
+  if (code === 'auth/weak-password') {
+    return 'Password is too weak. Use at least 6 characters.';
+  }
+
+  if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+    return 'Invalid email or password.';
+  }
+
+  if (code === 'auth/popup-closed-by-user') {
+    return 'Google sign-in was cancelled.';
+  }
+
+  return error?.response?.data?.message || error?.message || fallbackMessage;
+};
+
 // Auth Service Functions
 
 /**
@@ -154,6 +180,7 @@ export const registerUser = async (name, email, password, confirmPassword) => {
       return {
         success: true,
         requiresOtp: true,
+        deliveryMode: otpResponse.deliveryMode,
         email,
         message: otpResponse.message || 'OTP sent successfully'
       };
@@ -163,7 +190,7 @@ export const registerUser = async (name, email, password, confirmPassword) => {
   } catch (error) {
     return {
       success: false,
-      message: error.response?.data?.message || 'Registration failed. Please try again.',
+      message: mapFirebaseAuthError(error, 'Registration failed. Please try again.'),
       error: error.message
     };
   }
@@ -192,7 +219,7 @@ export const loginUser = async (email, password) => {
   } catch (error) {
     return {
       success: false,
-      message: error.response?.data?.message || 'Login failed. Please check your credentials.',
+      message: mapFirebaseAuthError(error, 'Login failed. Please check your credentials.'),
       error: error.message
     };
   }
@@ -219,7 +246,7 @@ export const continueWithGoogle = async () => {
   } catch (error) {
     return {
       success: false,
-      message: error.response?.data?.message || 'Google sign-in failed. Please try again.',
+      message: mapFirebaseAuthError(error, 'Google sign-in failed. Please try again.'),
       error: error.message
     };
   }

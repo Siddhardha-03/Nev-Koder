@@ -2,7 +2,7 @@ import pool from '../config/database.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 import { admin, isFirebaseInitialized } from '../firebaseAdmin.js';
 import { createOTP, verifyOTP, markOTPAsUsed, checkOTPResendCooldown, updateLastOTPSentTime, OTP_PURPOSES } from '../services/otpService.js';
-import { sendOTPEmail, sendPasswordResetOTPEmail } from '../services/emailService.js';
+import { sendOTPEmail, sendPasswordResetOTPEmail, getEmailDeliveryMode } from '../services/emailService.js';
 
 const setRefreshTokenCookie = (res, refreshToken) => {
   res.cookie('refreshToken', refreshToken, {
@@ -139,12 +139,17 @@ export const firebaseRegisterRequestOtp = async (req, res) => {
     await updateLastOTPSentTime(dbUser.id);
     const emailResult = await sendOTPEmail(dbUser.email, otpResult.otp, dbUser.name || 'User');
     if (!emailResult.success) {
-      return res.status(500).json({ success: false, message: 'Failed to send OTP email' });
+      return res.status(503).json({
+        success: false,
+        message: 'We generated your OTP, but failed to deliver email. Please try again shortly or contact support.',
+        deliveryMode: emailResult.deliveryMode || getEmailDeliveryMode()
+      });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'OTP sent successfully. Please verify your email to complete registration.'
+      message: emailResult.message || 'OTP sent successfully. Please verify your email to complete registration.',
+      deliveryMode: emailResult.deliveryMode || getEmailDeliveryMode()
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Failed to send registration OTP', error: error.message });
@@ -239,7 +244,10 @@ export const firebaseForgotPassword = async (req, res) => {
       }
 
       await updateLastOTPSentTime(user.id);
-      await sendPasswordResetOTPEmail(user.email, otpResult.otp, user.name || 'User');
+      const emailResult = await sendPasswordResetOTPEmail(user.email, otpResult.otp, user.name || 'User');
+      if (!emailResult.success) {
+        console.warn(`Password reset OTP delivery failed for ${user.email}: ${emailResult.error || emailResult.message}`);
+      }
 
       return res.status(200).json({ success: true, message: 'If account exists, OTP has been sent' });
     } finally {

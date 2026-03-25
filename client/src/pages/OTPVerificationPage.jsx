@@ -83,7 +83,7 @@ function OTPVerificationPage() {
       const response = await authService.resendRegistrationOTP()
 
       if (response.success) {
-        setSuccessMessage('OTP sent to your email.')
+        setSuccessMessage(response.message || 'OTP sent successfully.')
         setResendCooldown(60)
       } else {
         setServerError(response.message || 'Failed to resend OTP.')
