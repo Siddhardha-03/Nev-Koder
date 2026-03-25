@@ -5,8 +5,45 @@ dotenv.config();
 
 const getEmailDeliveryMode = () => {
   const mode = String(process.env.EMAIL_DELIVERY_MODE || 'smtp').toLowerCase();
-  if (mode === 'disabled' || mode === 'log') return mode;
+  if (mode === 'disabled' || mode === 'log' || mode === 'brevo_api') return mode;
   return 'smtp';
+};
+
+const sendViaBrevoApi = async ({ to, subject, html }) => {
+  const apiKey = String(process.env.BREVO_API_KEY || '').trim();
+  const senderEmail = String(process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER || '').trim();
+  const senderName = String(process.env.BREVO_SENDER_NAME || 'nev-koder').trim();
+
+  if (!apiKey) {
+    throw new Error('BREVO_API_KEY is required when EMAIL_DELIVERY_MODE=brevo_api');
+  }
+
+  if (!senderEmail) {
+    throw new Error('BREVO_SENDER_EMAIL or EMAIL_USER is required when EMAIL_DELIVERY_MODE=brevo_api');
+  }
+
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'content-type': 'application/json',
+      'api-key': apiKey
+    },
+    body: JSON.stringify({
+      sender: {
+        name: senderName,
+        email: senderEmail
+      },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html
+    })
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Brevo API failed (${response.status}): ${body}`);
+  }
 };
 
 const dispatchEmail = async ({ to, subject, html }) => {
@@ -24,6 +61,11 @@ const dispatchEmail = async ({ to, subject, html }) => {
       preview: String(html || '').slice(0, 180)
     });
     return { success: true, message: 'Email logged only (not sent)' };
+  }
+
+  if (mode === 'brevo_api') {
+    await sendViaBrevoApi({ to, subject, html });
+    return { success: true, message: 'Email sent successfully via Brevo API' };
   }
 
   await transporter.sendMail({
