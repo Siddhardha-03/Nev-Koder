@@ -276,6 +276,21 @@
   background: rgba(239, 68, 68, 0.02);
 }
 
+@media (max-width: 768px) {
+  .compiler-test-cases {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .test-case-result {
+    border-radius: 8px;
+  }
+
+  .test-case-header {
+    padding: 0.6rem;
+  }
+}
+
 .test-case-header {
   display: flex;
   justify-content: space-between;
@@ -299,6 +314,138 @@
 
 .icon-failure {
   color: #ef4444;
+}
+
+/* Mobile Responsive Breakpoints */
+@media (max-width: 1366px) {
+  .compiler-main {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 1024px) {
+  .compiler-main {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .compiler-results-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .compiler-main {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .compiler-editor,
+  .compiler-output {
+    border-radius: 10px;
+  }
+
+  .compiler-results-summary {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+    padding: 0.75rem;
+  }
+
+  .results-stat {
+    padding: 0.75rem;
+  }
+
+  .compiler-panel-header {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .compiler-output-body {
+    height: 250px;
+    font-size: 0.8rem;
+  }
+
+  .compiler-editor .monaco-container {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 640px) {
+  .compiler-shell {
+    background: #f9f9f9;
+  }
+
+  .compiler-main {
+    padding: 0.5rem;
+  }
+
+  .compiler-language-select {
+    min-width: 120px;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.5rem;
+  }
+
+  .compiler-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+    border-radius: 8px;
+  }
+
+  .compiler-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .compiler-output-body {
+    height: 200px;
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+
+  .results-stat-label {
+    font-size: 0.7rem;
+  }
+
+  .results-stat-value {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .compiler-main {
+    min-height: auto;
+  }
+
+  .compiler-results-summary {
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .compiler-output-body {
+    height: 180px;
+  }
+
+  .compiler-editor .monaco-container {
+    min-height: 200px;
+  }
+}
+
+@media (max-width: 360px) {
+  .compiler-btn {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .compiler-language-select {
+    min-width: 100px;
+    font-size: 0.75rem;
+  }
+
+  .results-stat-value {
+    font-size: 1.2rem;
+  }
 }
 
 .test-case-meta {

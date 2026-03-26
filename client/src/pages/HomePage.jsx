@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import LandingNavbar from '../components/LandingNavbar'
+import homeLogo from '../assets/Logo_new_nev_home.svg'
 import compilerIcon from '../assets/compiler_icon.png'
 import heroImg from '../assets/hero.png'
 import interviewPrepIcon from '../assets/Interview_prep.png'
@@ -177,8 +178,7 @@ function HomePage() {
         <div className="footer-top">
           <div className="footer-brand-block">
             <div className="footer-brand">
-              <img src="/Logo_nev.svg" alt="Nev Koder logo" className="footer-logo" />
-              <span className="footer-brand-name">Koder</span>
+              <img src={homeLogo} alt="Nev Koder logo" className="footer-logo" />
             </div>
             <p>
               Build consistency with coding practice, smart assessments, and interview-ready quizzes.

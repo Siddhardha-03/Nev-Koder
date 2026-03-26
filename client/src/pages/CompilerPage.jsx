@@ -3,6 +3,7 @@ import Editor from '@monaco-editor/react';
 import { Play, RotateCcw, Clipboard, Download, Github, Linkedin, Mail, MapPin, Phone, CheckCircle, XCircle } from 'lucide-react';
 import { executeCode, runTestCase, submitSolution } from '../services/compilerService';
 import LandingNavbar from '../components/LandingNavbar';
+import defaultLogo from '../assets/logo_nev_new.svg';
 import '../App.css';
 import './CompilerPage.css';
 
@@ -446,8 +447,7 @@ function CompilerPage({ problem = null }) {
         <div className="footer-top">
           <div className="footer-brand-block">
             <div className="footer-brand">
-              <img src="/Logo_nev.svg" alt="Nev Koder logo" className="footer-logo" />
-              <span className="footer-brand-name">Koder</span>
+              <img src={defaultLogo} alt="Nev Koder logo" className="footer-logo" />
             </div>
             <p>
               Build consistency with coding practice, smart assessments, and interview-ready quizzes.

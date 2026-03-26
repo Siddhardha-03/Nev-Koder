@@ -1,6 +1,7 @@
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import * as authService from '../services/authService'
+import defaultLogo from '../assets/logo_nev_new.svg'
 import './AuthPages.css'
 
 function ResetPasswordPage() {
@@ -106,8 +107,7 @@ function ResetPasswordPage() {
         </div>
 
         <div className="auth-brand">
-          <img src="/Logo_nev.svg" alt="Nev Koder logo" />
-          <span>Koder</span>
+          <img src={defaultLogo} alt="Nev Koder logo" />
         </div>
 
         <h1 className="auth-title">Reset Password</h1>

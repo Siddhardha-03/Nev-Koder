@@ -50,12 +50,14 @@
 @media (max-width: 1100px) {
   .problem-layout-shell {
     flex-direction: column;
+    gap: 0.75rem;
   }
 
   .problem-left-pane {
     width: 100% !important;
     min-height: auto;
     max-height: 50vh;
+    border-radius: 12px;
   }
 
   .problem-divider {
@@ -67,6 +69,54 @@
 
   .problem-right-pane {
     width: 100% !important;
-    min-height: 520px;
+    min-height: 400px;
+    border-radius: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .problem-layout-shell {
+    gap: 0.6rem;
+  }
+
+  .problem-left-pane,
+  .problem-right-pane {
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(17, 42, 86, 0.06);
+  }
+
+  .problem-right-pane {
+    min-height: 350px;
+  }
+}
+
+@media (max-width: 640px) {
+  .problem-layout-shell {
+    gap: 0.5rem;
+  }
+
+  .problem-left-pane {
+    max-height: 45vh;
+    border-radius: 8px;
+  }
+
+  .problem-right-pane {
+    min-height: 300px;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .problem-layout-shell {
+    min-height: calc(100vh - 120px);
+    gap: 0.4rem;
+  }
+
+  .problem-left-pane {
+    max-height: 40vh;
+  }
+
+  .problem-right-pane {
+    min-height: 280px;
   }
 }

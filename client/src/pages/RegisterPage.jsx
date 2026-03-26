@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import * as authService from '../services/authService'
+import defaultLogo from '../assets/logo_nev_new.svg'
 import './AuthPages.css'
 
 function RegisterPage() {
@@ -88,8 +89,7 @@ function RegisterPage() {
         </div>
 
         <div className="auth-brand">
-          <img src="/Logo_nev.svg" alt="Nev Koder logo" />
-          <span>Koder</span>
+          <img src={defaultLogo} alt="Nev Koder logo" />
         </div>
 
         <h1 className="auth-title">Create Account</h1>

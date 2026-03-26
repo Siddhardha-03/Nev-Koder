@@ -26,8 +26,10 @@
 }
 
 .auth-brand img {
-  width: 42px;
-  height: 42px;
+  width: clamp(52px, 8vw, 72px);
+  height: auto;
+  max-height: clamp(52px, 8vw, 72px);
+  object-fit: contain;
 }
 
 .auth-brand span {
