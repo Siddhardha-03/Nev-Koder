@@ -63,7 +63,6 @@ function LandingNavbar() {
           <a href="#" onClick={() => setIsMobileMenuOpen(false)}>Quizzes</a>
           <NavLink to="/compiler" onClick={() => setIsMobileMenuOpen(false)}>Compiler</NavLink>
           {isAdmin ? <NavLink to="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)}>Admin</NavLink> : null}
-          {!isLoggedIn && <NavLink to="/login" onClick={() => setIsMobileMenuOpen(false)}>Sign In</NavLink>}
         </nav>
 
         <div className="menu-actions">

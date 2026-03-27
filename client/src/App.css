@@ -34,10 +34,7 @@
   }
 }
 
-  color: #f6f2f2;
-  min-height: 120px;
 }
-
 .brand {
   display: flex;
   align-items: center;
@@ -150,7 +147,7 @@
 .mobile-menu-toggle {
   display: none;
   border: 1px solid rgba(17, 24, 39, 0.2);
-  background: rgba(255, 255, 255, 0.9);
+ 
   color: #111827;
   padding: 0.45rem 0.65rem;
   border-radius: 0.5rem;
@@ -197,7 +194,7 @@
   min-width: 180px;
   display: grid;
   gap: 0.2rem;
-  background: #2e2d2d;
+  background: #ffffff;
   border: 1px solid #d2deef;
   border-radius: 10px;
   padding: 0.35rem;
@@ -910,11 +907,13 @@
   .nav-content {
     display: none;
     flex-direction: column;
-    width: 100%;
+    width: 70%;
     margin-top: 0.6rem;
-    background: #ffffff;
+    
+    background:transparent;
     padding: 0.7rem;
     border-radius: 0.75rem;
+    border: 2px solid rgba(231, 232, 234, 0.2);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   }
 
@@ -947,7 +946,7 @@
   }
 
   .landing-page .menu-links a {
-    color: #090909;
+    color: #ece4e4;
   }
 
   .top-nav .btn {
