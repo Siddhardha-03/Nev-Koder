@@ -1,10 +1,10 @@
 .problem-page-shell {
-  min-height: 100vh;
+  min-height: 0;
   background: #eef1f7;
 }
 
 .problem-page-main {
-  padding: 0.8rem 1rem 1rem;
+  padding: 0;
 }
 
 .problem-page-top {
@@ -49,7 +49,7 @@
 }
 
 .problem-desc-card {
-  height: 100%;
+  height: 10%;
   overflow-y: auto;
   padding: 1rem;
 }
@@ -69,7 +69,7 @@
 }
 
 .problem-difficulty-badge {
-  border-radius: 999px;
+  border-radius: 99px;
   padding: 0.22rem 0.62rem;
   font-size: 0.74rem;
   font-weight: 700;
@@ -197,7 +197,8 @@
 }
 
 .problem-compiler-embed .compiler-shell {
-  min-height: auto;
+  min-height: 120px;
+  height: 100%;
   background: transparent;
 }
 

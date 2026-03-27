@@ -7,9 +7,13 @@ function ProblemDescription({ problem }) {
   return (
     <div className="problem-desc-card">
       <div className="problem-head">
-        <h1>{problem.title}</h1>
+        <h1>
+          {problem.title?.toUpperCase()}
+          {problem?.solved ? <span className="problem-solved-badge">Solved</span> : null}
+         </h1>
         <span className={`problem-difficulty-badge problem-difficulty-${String(problem.difficulty || '').toLowerCase()}`}>
           {problem.difficulty}
+          
         </span>
       </div>
 

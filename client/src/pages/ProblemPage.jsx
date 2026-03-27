@@ -42,8 +42,7 @@ function ProblemPage() {
 
       <main className="problem-page-main">
         <div className="problem-page-top">
-          <Link to="/problems" className="problem-back-link">← Back to Problems</Link>
-          {problem?.solved ? <span className="problem-solved-badge">Solved</span> : null}
+      
         </div>
 
         {loading ? <div className="problem-status problem-status-loading">Loading problem...</div> : null}

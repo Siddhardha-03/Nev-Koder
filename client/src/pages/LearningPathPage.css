@@ -106,12 +106,32 @@
   border: 1px solid #dbe4f2;
   padding: 1rem;
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 180px;
 }
 
 .learning-path-card:hover {
   transform: translateY(-4px);
   border-color: #b7cae9;
   box-shadow: 0 16px 35px rgba(17, 42, 86, 0.14);
+}
+
+@media (max-width: 920px) {
+  .learning-path-cards {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  .learning-path-shell {
+    padding: 0.8rem;
+  }
+
+  .learning-path-card {
+    min-height: unset;
+    padding: 0.9rem;
+  }
 }
 
 .learning-card-kicker {
@@ -317,14 +337,20 @@
 }
 
 .learning-problem-row {
-  border: 1px solid #e3ebf8;
+  border: 1px solid #dee8f7;
   border-radius: 8px;
   background: #ffffff;
-  padding: 0.42rem 0.5rem;
+  padding: 0.4rem 0.45rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.3rem;
+  gap: 0.25rem;
   align-items: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.learning-problem-row:hover {
+  transform: translateY(-1px);
+  background: #f7fbff;
 }
 
 .learning-problem-main h4 {
@@ -337,6 +363,11 @@
   margin: 0.1rem 0 0;
   color: #607693;
   font-size: 0.68rem;
+}
+
+/* Remove capsule tags for cleaner layout */
+.learning-problem-meta span {
+  display: none;
 }
 
 .learning-problem-meta {

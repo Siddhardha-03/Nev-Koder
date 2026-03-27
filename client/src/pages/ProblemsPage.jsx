@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LandingNavbar from '../components/LandingNavbar';
 import { getPublicProblems } from '../services/problemsService';
 import { getDashboardStats } from '../services/authService';
 import './ProblemsPage.css';
 
 function ProblemsPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [tag, setTag] = useState('');
@@ -172,12 +173,18 @@ function ProblemsPage() {
               <span>Tags</span>
               <span>Action</span>
             </div>
-            {normalizedProblems.map((problem) => {
+            {normalizedProblems.map((problem, index) => {
               const tags = problem.tags?.tags || [];
 
               return (
-                <article className="problems-row" key={problem.id}>
+                <article
+                  className="problems-row"
+                  key={problem.id}
+                  onClick={() => navigate(`/problems/${problem.id}`)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="problems-row-title">
+                    <div className="problems-row-number">{index + 1}.</div>
                     <h3>
                       {problem.title}
                       {problem.solved ? <span className="problems-solved-pill">Solved</span> : null}
@@ -206,6 +213,7 @@ function ProblemsPage() {
                     <Link
                       to={`/problems/${problem.id}`}
                       className={`problems-btn ${problem.solved ? 'problems-btn-solved' : 'problems-btn-primary'}`}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {problem.solved ? 'Solved' : 'Solve'}
                     </Link>

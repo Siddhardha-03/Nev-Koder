@@ -11,8 +11,9 @@ import {
   Sparkles,
   TimerReset,
 } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import LandingNavbar from '../components/LandingNavbar'
+import { isAuthenticated } from '../services/authService'
 import homeLogo from '../assets/Logo_new_nev_home.svg'
 import compilerIcon from '../assets/compiler_icon.png'
 import heroImg from '../assets/hero.png'
@@ -25,6 +26,16 @@ import solveChallengesIcon from '../assets/solve_challenges.png'
 import '../App.css'
 
 function HomePage() {
+  const navigate = useNavigate();
+
+  const onStartPracticing = () => {
+    if (isAuthenticated()) {
+      navigate('/problems');
+    } else {
+      navigate('/login');
+    }
+  };
+
   const featureCards = [
     {
       title: 'Solve Coding Challenges',
@@ -91,9 +102,9 @@ function HomePage() {
           <h1>Level Up Your Coding Skills</h1>
           <p className="subtitle">Practice, Compete, and Succeed.</p>
           <div className="hero-actions">
-            <Link to="/register" className="btn btn-primary">
+            <button type="button" className="btn btn-primary" onClick={onStartPracticing}>
               Start Practicing
-            </Link>
+            </button>
             <Link to="/login" className="btn btn-secondary">
               Learn More
             </Link>
