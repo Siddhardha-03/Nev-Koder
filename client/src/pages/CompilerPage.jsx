@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { Play, RotateCcw, Clipboard, Download, Github, Linkedin, Mail, MapPin, Phone, CheckCircle, XCircle } from 'lucide-react';
+import { Play, RotateCcw, Download, Github, Linkedin, Mail, MapPin, Phone } from 'lucide-react';
 import { executeCode, runTestCase, submitSolution } from '../services/compilerService';
 import LandingNavbar from '../components/LandingNavbar';
 import defaultLogo from '../assets/logo_nev_new.svg';
@@ -48,8 +48,11 @@ const getProblemScaffold = (problem, languageKey) => {
 };
 
 function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult = () => {}, hideEmbeddedOutput = false }) {
+  const isEmbedded = Boolean(problem);
+  const hideOutputPanel = hideEmbeddedOutput || isEmbedded;
   const [language, setLanguage] = useState('python');
   const [code, setCode] = useState(getLanguageConfig('python').template);
+  const [editorSessionKey, setEditorSessionKey] = useState(0);
   const [stdin, setStdin] = useState('');
   const [output, setOutput] = useState('Ready. Click Run to execute your code.');
   const [resultMeta, setResultMeta] = useState(null);
@@ -58,12 +61,15 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
   const [submissionResults, setSubmissionResults] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [runTestResult, setRunTestResult] = useState(null);
+  const [awaitingInput, setAwaitingInput] = useState(false);
+  const stdinRef = useRef(null);
 
   const languageConfig = useMemo(() => getLanguageConfig(language), [language]);
 
   useEffect(() => {
     const scaffold = getProblemScaffold(problem, language);
     setCode(scaffold || getLanguageConfig(language).template);
+    setEditorSessionKey((value) => value + 1);
   }, [language, problem]);
 
   useEffect(() => {
@@ -97,6 +103,7 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
       return;
     }
 
+    setAwaitingInput(false);
 
     try {
       setRunning(true);
@@ -135,8 +142,26 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
           return;
         }
 
-        setResultMeta(response.result || null);
-        setOutput(formatOutput(response.result));
+        const nextResult = response.result || null;
+        setResultMeta(nextResult);
+        const formattedOutput = formatOutput(nextResult);
+        setOutput(formattedOutput);
+
+        const combined = [
+          nextResult?.stderr,
+          nextResult?.compile_output,
+          nextResult?.message,
+          formattedOutput
+        ].filter(Boolean).join(' ');
+
+        const needsInput = !stdin.trim()
+          && /(eoferror|eof|nosuchelementexception|scanner|input\(|cin|stdin)/i.test(combined);
+
+        if (needsInput) {
+          setAwaitingInput(true);
+          setOutput(`${formattedOutput}\n\nProgram is waiting for stdin input. Enter input below and click Run again.`);
+          setTimeout(() => stdinRef.current?.focus(), 0);
+        }
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message
@@ -192,19 +217,16 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
 
   const handleClearCode = () => {
     setCode(languageConfig.template);
+    setEditorSessionKey((value) => value + 1);
+  };
+
+  const handleClearInput = () => {
+    setStdin('');
   };
 
   const handleClearOutput = () => {
-    setOutput('');
-    setResultMeta(null);
-  };
-
-  const handleCopyOutput = async () => {
-    try {
-      await navigator.clipboard.writeText(output || '');
-    } catch {
-      // no-op
-    }
+    setOutput('Ready. Click Run to execute your code.');
+    setAwaitingInput(false);
   };
 
   const handleDownloadCode = () => {
@@ -229,9 +251,9 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
 
   return (
     <section className="compiler-shell">
-      <LandingNavbar />
+      {!isEmbedded && <LandingNavbar />}
 
-      <main className="compiler-main">
+      <main className={`compiler-main ${hideOutputPanel ? 'compiler-main-single' : ''}`}>
         <article className="compiler-editor">
           <div className="compiler-panel-header">
             <span>Editor</span>
@@ -276,11 +298,12 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
             </div>
           </div>
           <Editor
+            key={`${language}-${editorSessionKey}`}
             height="clamp(340px, 78vh, 980px)"
             className="monaco-container"
             theme={editorTheme}
             language={languageConfig.monaco}
-            value={code}
+            defaultValue={code}
             onChange={(value) => setCode(value || '')}
             options={{
               fontSize: 14,
@@ -288,27 +311,46 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
               minimap: { enabled: false },
               automaticLayout: true,
               wordWrap: 'on',
+              wrappingStrategy: 'advanced',
+              wrappingIndent: 'same',
+              scrollBeyondLastColumn: 0,
               scrollBeyondLastLine: false,
+              quickSuggestions: false,
+              suggestOnTriggerCharacters: false,
+              wordBasedSuggestions: 'off',
+              parameterHints: { enabled: false },
+              snippetSuggestions: 'none',
+              acceptSuggestionOnCommitCharacter: false,
+              acceptSuggestionOnEnter: 'off',
+              tabCompletion: 'off',
               tabSize: 2
             }}
           />
         </article>
 
-        {!hideEmbeddedOutput && (
+        {!hideOutputPanel && (
           <article className="compiler-output">
             <div className="compiler-panel-header">
               <span>Output</span>
+              <div className="compiler-actions">
+                <button type="button" className="compiler-btn compiler-btn-clear" onClick={handleClearInput}>Clear Input</button>
+                <button type="button" className="compiler-btn compiler-btn-clear" onClick={handleClearOutput}>Clear Output</button>
+              </div>
             </div>
             <div className="compiler-output-body">
               <div className="compiler-stdin">
               <label htmlFor="output-stdin"><strong>stdin Input:</strong></label>
               <textarea
+                ref={stdinRef}
+                className="compiler-stdin-textarea"
                 id="output-stdin"
                 value={stdin}
                 onChange={(event) => setStdin(event.target.value)}
                 placeholder="Enter input for your program (stdin)..."
-                style={{ width: '100%', minHeight: '80px', resize: 'vertical', marginBottom: '0.7rem' }}
               />
+              {awaitingInput && (
+                <div className="compiler-awaiting-input">Program is waiting for input. Provide stdin and click Run again.</div>
+              )}
             </div>
             <div>
               <strong>Console Output:</strong>
@@ -363,6 +405,7 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
         )}
       </main>
 
+      {!isEmbedded && (
       <footer className="site-footer">
         <div className="footer-top">
           <div className="footer-brand-block">
@@ -427,6 +470,7 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
           </div>
         </div>
       </footer>
+      )}
     </section>
   );
 }

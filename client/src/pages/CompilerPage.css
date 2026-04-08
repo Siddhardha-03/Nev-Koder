@@ -49,10 +49,14 @@
 
 .compiler-main {
   display: grid;
-  grid-template-columns: 6fr 4fr;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 4fr);
   gap: 0rem;
   padding: 1rem;
   min-height: calc(100vh - 150px);
+}
+
+.compiler-main.compiler-main-single {
+  grid-template-columns: 1fr;
 }
 
 .compiler-editor,
@@ -62,6 +66,7 @@
   border-radius: 14px;
   box-shadow: 0 10px 28px rgba(16, 39, 79, 0.09);
   overflow: hidden;
+  min-width: 0;
 }
 
 .compiler-panel-header {
@@ -77,6 +82,44 @@
 
 .compiler-editor .monaco-container {
   min-height: 300px;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.compiler-editor .monaco-container .monaco-editor,
+.compiler-editor .monaco-container .overflow-guard,
+.compiler-editor .monaco-container .monaco-editor-background,
+.compiler-editor .monaco-container .monaco-editor .margin,
+.compiler-editor .monaco-container .monaco-editor .overflow-guard {
+  width: 100% !important;
+}
+
+.compiler-editor .monaco-container .monaco-editor .view-lines,
+.compiler-editor .monaco-container .monaco-editor .view-line,
+.compiler-editor .monaco-container .monaco-editor .inputarea,
+.compiler-editor .monaco-container .monaco-editor .lines-content {
+  max-width: 100% !important;
+}
+
+.compiler-editor .monaco-container .monaco-editor .view-line {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+}
+
+.compiler-editor .monaco-container .monaco-editor .view-line span {
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+}
+
+.compiler-editor .monaco-container .monaco-scrollable-element,
+.compiler-editor .monaco-container .monaco-editor .overflow-guard,
+.compiler-editor .monaco-container .monaco-editor .view-overlays,
+.compiler-editor .monaco-container .monaco-editor .inputarea.ime-input {
+  overflow-x: hidden !important;
 }
 
 .compiler-editor .compiler-btn {
@@ -332,6 +375,23 @@
   border-radius: 10px;
   padding: 0.65rem;
   font-family: Consolas, 'Courier New', monospace;
+}
+
+.compiler-stdin-textarea {
+  width: 100%;
+  min-height: 80px;
+  resize: vertical;
+  margin-bottom: 0.7rem;
+}
+
+.compiler-awaiting-input {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  color: #8a6d1d;
+  background: #fff8df;
+  border: 1px solid #f0df9a;
+  border-radius: 8px;
+  padding: 0.35rem 0.55rem;
 }
 
 /* Output Tabs Styles */
