@@ -4,37 +4,42 @@
 }
 
 .dashboard-shell {
-  max-width: 1100px;
+  max-width: 1140px;
   margin: 0 auto;
-  padding: 1.25rem;
+  padding: 1.5rem;
   display: grid;
-  gap: 0.9rem;
+  gap: 1.25rem;
 }
 
+/* ============ HEADER ============ */
 .dashboard-header {
-  background: #fff;
+  background: linear-gradient(135deg, #fff 0%, #f8fafb 100%);
   border: 1px solid #dbe4f2;
-  border-radius: 14px;
+  border-radius: 16px;
   box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
-  padding: 1rem 1.1rem;
+  padding: 2rem 1.5rem;
 }
 
-.dashboard-header h1 {
+.dashboard-header-content h1 {
   margin: 0;
   color: #1f355d;
-  font-size: 1.45rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  line-height: 1.2;
 }
 
-.dashboard-header p {
-  margin: 0.3rem 0 0;
+.dashboard-header-content p {
+  margin: 0.5rem 0 0;
   color: #4f678e;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 400;
 }
 
+/* ============ STATS BAR ============ */
 .dashboard-stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
-  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
 }
 
 .dashboard-stat-card {
@@ -42,7 +47,27 @@
   border: 1px solid #dbe4f2;
   border-radius: 14px;
   box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
-  padding: 0.95rem 1rem;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(17, 42, 86, 0.15);
+}
+
+.stat-icon {
+  font-size: 2rem;
+  line-height: 1;
+  min-width: 48px;
+  text-align: center;
+}
+
+.stat-content {
+  flex: 1;
 }
 
 .dashboard-stat-label {
@@ -50,212 +75,870 @@
   color: #4f678e;
   font-size: 0.8rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .dashboard-stat-value {
-  margin: 0.25rem 0 0;
+  margin: 0.4rem 0 0;
   color: #152c52;
-  font-size: 1.9rem;
+  font-size: 2rem;
   font-weight: 800;
   line-height: 1;
 }
 
-.dashboard-section {
+/* ============ PROGRESS CARD ============ */
+.dashboard-progress-section {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.dashboard-progress-card {
+  background: #fff;
+  border: 1px solid #dbe4f2;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
+  padding: 2rem;
+}
+
+.dashboard-progress-card h2 {
+  margin: 0 0 1.5rem;
+  color: #1f355d;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.progress-container {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+
+.progress-visual {
+  flex: 0 0 auto;
+}
+
+.progress-circle {
+  width: 150px;
+  height: 150px;
+}
+
+.progress-circle circle {
+  fill: none;
+}
+
+.progress-circle .progress-bg {
+  stroke: #e5e7eb;
+  stroke-width: 6;
+}
+
+.progress-circle .progress-fill {
+  stroke: url(#progressGradient);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 60px 60px;
+}
+
+.progress-circle .progress-text {
+  x: 60px;
+  y: 60px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  font-size: 24px;
+  font-weight: 800;
+  fill: #1f355d;
+  font-family: var(--font-heading);
+}
+
+.progress-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.progress-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.progress-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.progress-label {
+  color: #4f678e;
+  font-weight: 500;
+  min-width: 60px;
+}
+
+.progress-count {
+  color: #152c52;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+/* ============ QUICK ACTIONS ============ */
+.dashboard-quick-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.dashboard-quick-actions h2 {
+  margin: 0 0 1rem;
+  color: #1f355d;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.quick-action-card {
   background: #fff;
   border: 1px solid #dbe4f2;
   border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
-  padding: 1rem 1.1rem;
-}
-
-.dashboard-section h2 {
-  margin: 0;
-  color: #1f355d;
-  font-size: 1.05rem;
-}
-
-.dashboard-section p {
-  margin: 0.5rem 0 0;
-  color: #4f678e;
-  font-size: 0.88rem;
-}
-
-.dashboard-email {
-  color: #223a63;
-  font-weight: 600;
-}
-
-.dashboard-actions {
+  padding: 1.25rem;
+  cursor: pointer;
   display: flex;
-  justify-content: flex-end;
-}
-
-.dashboard-logout {
-  border: 0;
-  border-radius: 10px;
-  padding: 0.55rem 0.95rem;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: 0.88rem;
-  cursor: pointer;
-  color: #fff;
-  background: linear-gradient(110deg, #ff8f36 0%, #ff6523 100%);
+  color: #1f355d;
+  font-size: 0.9rem;
+  min-height: 120px;
+  justify-content: center;
 }
 
-/* Mobile Responsive Breakpoints */
+.quick-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(17, 42, 86, 0.15);
+  border-color: #dbe4f2;
+}
+
+.quick-action-primary {
+  background: linear-gradient(135deg, #ff8f36 0%, #ff6523 100%);
+  border: none;
+  color: #fff;
+}
+
+.quick-action-primary:hover {
+  box-shadow: 0 12px 32px rgba(255, 101, 35, 0.3);
+}
+
+.action-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.action-label {
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+}
+
+/* ============ RECENT ACTIVITY ============ */
+.dashboard-activity {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.dashboard-activity h2 {
+  margin: 0 0 1rem;
+  color: #1f355d;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.activity-list {
+  background: #fff;
+  border: 1px solid #dbe4f2;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
+}
+
+.activity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.2s ease;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+.activity-item:hover {
+  background: #fafbfc;
+}
+
+.activity-info {
+  flex: 1;
+}
+
+.activity-problem {
+  margin: 0;
+  color: #1f355d;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.activity-difficulty {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.activity-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: right;
+}
+
+.activity-status {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+}
+
+.activity-status.accepted {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.activity-status.failed {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.activity-time {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  min-width: 80px;
+}
+
+/* ============ RECOMMENDED PROBLEMS ============ */
+.dashboard-recommended {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.dashboard-recommended h2 {
+  margin: 0 0 1rem;
+  color: #1f355d;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.recommended-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.recommended-card {
+  background: #fff;
+  border: 1px solid #dbe4f2;
+  border-radius: 14px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
+}
+
+.recommended-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(17, 42, 86, 0.15);
+  border-color: #ff6523;
+}
+
+.recommended-card h3 {
+  margin: 0 0 0.75rem;
+  color: #1f355d;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.recommended-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  text-transform: capitalize;
+}
+
+.badge.difficulty {
+  border: 1.5px solid;
+  background: #fff;
+}
+
+.badge.topic {
+  background: #f0f4f8;
+  color: #4f678e;
+}
+
+.recommended-acceptance {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+/* ============ PROFILE CARD ============ */
+.dashboard-profile {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.profile-card {
+  background: #fff;
+  border: 1px solid #dbe4f2;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
+}
+
+.profile-card h2 {
+  margin: 0 0 1rem;
+  color: #1f355d;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.profile-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.profile-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff8f36 0%, #ff6523 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-name {
+  margin: 0;
+  color: #1f355d;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.profile-email {
+  margin: 0.25rem 0 0;
+  color: #4f678e;
+  font-size: 0.85rem;
+}
+
+.profile-achievements {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.achievement {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #f8fafb;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #152c52;
+}
+
+.achievement-icon {
+  font-size: 1.3rem;
+}
+
+.achievement-label {
+  line-height: 1.2;
+}
+
+.btn-logout {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(110deg, #ff8f36 0%, #ff6523 100%);
+  color: #fff;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+  box-shadow: 0 8px 24px rgba(255, 101, 35, 0.3);
+  transform: translateY(-2px);
+}
+
+/* ============ RESPONSIVE DESIGN ============ */
+
 @media (max-width: 1024px) {
   .dashboard-shell {
     max-width: 100%;
+    padding: 1.25rem;
   }
 
-  .dashboard-header h1 {
-    font-size: clamp(1.1rem, 4vw, 1.45rem);
+  .dashboard-header-content h1 {
+    font-size: clamp(1.3rem, 3vw, 1.7rem);
+  }
+
+  .progress-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .recommended-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+
+  .activity-meta {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
   }
 }
 
 @media (max-width: 768px) {
   .dashboard-shell {
     padding: 1rem;
-    gap: 0.8rem;
+    gap: 1rem;
   }
 
   .dashboard-header {
-    padding: 0.9rem 1rem;
+    padding: 1.25rem;
   }
 
-  .dashboard-header h1 {
-    font-size: clamp(1rem, 3.5vw, 1.3rem);
+  .dashboard-header-content h1 {
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+  }
+
+  .dashboard-header-content p {
+    font-size: 0.9rem;
   }
 
   .dashboard-stats {
     grid-template-columns: 1fr;
-    gap: 0.7rem;
+    gap: 0.85rem;
   }
 
   .dashboard-stat-card {
-    padding: 0.85rem 0.95rem;
+    padding: 1rem;
   }
 
-  .dashboard-stat-value {
-    font-size: clamp(1.4rem, 5vw, 1.9rem);
+  .dashboard-progress-card {
+    padding: 1.5rem;
   }
 
-  .dashboard-section {
-    padding: 0.9rem 1rem;
+  .progress-container {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 
-  .dashboard-section h2 {
-    font-size: clamp(0.95rem, 3vw, 1.05rem);
+  .progress-circle {
+    width: 112px;
+    height: 112px;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .quick-action-card {
+    min-height: 104px;
+    padding: 1rem 0.85rem;
+  }
+
+  .action-icon {
+    font-size: 1.75rem;
+  }
+
+  .action-label {
+    font-size: 0.8rem;
+  }
+
+  .activity-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .activity-meta {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .recommended-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .recommended-card {
+    padding: 1rem;
+  }
+
+  .recommended-card h3 {
+    font-size: 0.9rem;
+  }
+
+  .profile-card {
+    padding: 1.25rem;
+  }
+
+  .profile-content {
+    margin-bottom: 1rem;
+  }
+
+  .profile-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+
+  .profile-achievements {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 }
 
 @media (max-width: 640px) {
   .dashboard-shell {
-    padding: 0.85rem;
+    padding: 0.8rem;
+    gap: 0.8rem;
   }
 
   .dashboard-header {
-    padding: 0.75rem 0.9rem;
-    border-radius: 12px;
+    padding: 0.95rem;
+    border-radius: 14px;
   }
 
-  .dashboard-header h1 {
-    font-size: clamp(0.95rem, 3vw, 1.15rem);
+  .dashboard-header-content h1 {
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    margin: 0;
   }
 
-  .dashboard-header p {
-    font-size: clamp(0.75rem, 2.5vw, 0.9rem);
+  .dashboard-header-content p {
+    font-size: 0.85rem;
+  }
+
+  .dashboard-stat-card {
+    padding: 0.9rem;
+    gap: 0.75rem;
+  }
+
+  .stat-icon {
+    font-size: 1.75rem;
+    min-width: 40px;
   }
 
   .dashboard-stat-label {
-    font-size: clamp(0.7rem, 2vw, 0.8rem);
+    font-size: 0.7rem;
   }
 
   .dashboard-stat-value {
-    font-size: clamp(1.2rem, 4.5vw, 1.7rem);
+    font-size: 1.6rem;
   }
 
-  .dashboard-section {
-    padding: 0.8rem 0.85rem;
-    border-radius: 12px;
+  .dashboard-progress-card {
+    padding: 1.1rem;
   }
 
-  .dashboard-section h2 {
-    font-size: clamp(0.9rem, 2.5vw, 1rem);
+  .dashboard-progress-card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
   }
 
-  .dashboard-logout {
-    padding: 0.45rem 0.75rem;
-    font-size: clamp(0.75rem, 2vw, 0.84rem);
+  .progress-circle {
+    width: 96px;
+    height: 96px;
+  }
+
+  .progress-circle .progress-text {
+    font-size: 18px;
+  }
+
+  .progress-container {
+    gap: 1rem;
+  }
+
+  .progress-breakdown {
+    gap: 0.5rem;
+  }
+
+  .progress-item {
+    font-size: 0.85rem;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .quick-action-card {
+    padding: 0.8rem 0.65rem;
+    min-height: 92px;
+    font-size: 0.72rem;
+  }
+
+  .action-icon {
+    font-size: 1.4rem;
+  }
+
+  .dashboard-activity h2,
+  .dashboard-quick-actions h2,
+  .dashboard-recommended h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .activity-item {
+    padding: 0.85rem 1rem;
+  }
+
+  .activity-problem {
+    font-size: 0.9rem;
+  }
+
+  .activity-difficulty {
+    font-size: 0.8rem;
+  }
+
+  .activity-status {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .activity-time {
+    font-size: 0.75rem;
+    min-width: auto;
+  }
+
+  .recommended-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recommended-card {
+    padding: 0.9rem;
+  }
+
+  .recommended-card h3 {
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.6rem;
+  }
+
+  .recommended-acceptance {
+    font-size: 0.8rem;
+  }
+
+  .profile-card {
+    padding: 0.95rem;
+  }
+
+  .profile-card h2 {
+    font-size: 1.1rem;
+  }
+
+  .profile-content {
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .profile-avatar {
+    width: 45px;
+    height: 45px;
+    font-size: 1.3rem;
+  }
+
+  .profile-name {
+    font-size: 0.95rem;
+  }
+
+  .profile-email {
+    font-size: 0.8rem;
+  }
+
+  .achievement {
+    padding: 0.55rem 0.6rem;
+    font-size: 0.72rem;
+    gap: 0.4rem;
+  }
+
+  .achievement-icon {
+    font-size: 1.1rem;
+  }
+
+  .btn-logout {
+    padding: 0.7rem;
+    font-size: 0.84rem;
   }
 }
 
 @media (max-width: 480px) {
-  .dashboard-page {
-    background: #f5f7fb;
-  }
-
   .dashboard-shell {
     padding: 0.7rem;
-    gap: 0.6rem;
+    gap: 0.7rem;
   }
 
   .dashboard-header {
-    padding: 0.7rem 0.8rem;
+    padding: 0.85rem;
+    border-radius: 14px;
   }
 
-  .dashboard-header h1 {
-    font-size: clamp(0.9rem, 2.8vw, 1.05rem);
+  .dashboard-header-content h1 {
+    font-size: clamp(0.95rem, 2vw, 1.15rem);
+    margin: 0;
   }
 
-  .dashboard-stat-card {
-    padding: 0.7rem 0.8rem;
+  .dashboard-header-content p {
+    font-size: 0.8rem;
+    margin-top: 0.35rem;
   }
 
-  .dashboard-stat-label {
-    font-size: 0.65rem;
+  .stat-icon {
+    font-size: 1.45rem;
+    min-width: 34px;
   }
 
   .dashboard-stat-value {
-    font-size: clamp(1rem, 4vw, 1.5rem);
+    font-size: 1.35rem;
   }
 
-  .dashboard-section {
-    padding: 0.7rem 0.75rem;
+  .dashboard-progress-card {
+    padding: 0.95rem;
   }
 
-  .dashboard-actions {
-    justify-content: flex-end;
+  .progress-circle {
+    width: 88px;
+    height: 88px;
   }
 
-  .dashboard-logout {
-    padding: 0.38rem 0.6rem;
-    font-size: 0.65rem;
-    border-radius: 8px;
+  .progress-circle .progress-text {
+    font-size: 17px;
+  }
+
+  .quick-action-card {
+    padding: 0.72rem 0.6rem;
+    min-height: 86px;
+    font-size: 0.68rem;
+  }
+
+  .action-icon {
+    font-size: 1.3rem;
+  }
+
+  .profile-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+
+  .recommended-badges {
+    gap: 0.35rem;
+  }
+
+  .activity-problem {
+    font-size: 0.85rem;
+  }
+
+  .btn-logout {
+    padding: 0.65rem;
+    font-size: 0.78rem;
   }
 }
 
 @media (max-width: 360px) {
   .dashboard-shell {
-    padding: 0.6rem;
+    padding: 0.55rem;
+    gap: 0.55rem;
   }
 
-  .dashboard-header h1 {
-    font-size: clamp(0.85rem, 2.5vw, 0.95rem);
+  .dashboard-header {
+    padding: 0.8rem;
+  }
+
+  .dashboard-header-content h1 {
+    font-size: 0.98rem;
+  }
+
+  .dashboard-header-content p {
+    font-size: 0.75rem;
   }
 
   .dashboard-stat-value {
-    font-size: clamp(0.95rem, 3.5vw, 1.3rem);
+    font-size: 1.2rem;
   }
 
-  .dashboard-section h2 {
-    font-size: clamp(0.8rem, 2vw, 0.9rem);
+  .quick-action-card {
+    font-size: 0.63rem;
+    padding: 0.65rem 0.55rem;
+  }
+
+  .profile-card h2 {
+    font-size: 1rem;
+  }
+
+  .achievement {
+    font-size: 0.68rem;
   }
 }
 
 @media (max-width: 760px) {
   .dashboard-shell {
-    padding: 1rem;
+    padding: 0.9rem;
   }
 
   .dashboard-stats {
