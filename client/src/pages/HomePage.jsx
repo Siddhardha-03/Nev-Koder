@@ -11,9 +11,11 @@ import {
   Sparkles,
   TimerReset,
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import LandingNavbar from '../components/LandingNavbar'
 import { isAuthenticated } from '../services/authService'
+import { useIntersectionObserver } from '../hooks/useIntersectionObserver'
 import homeLogo from '../assets/Logo_new_nev_home.svg'
 import compilerIcon from '../assets/compiler_icon.png'
 import heroImg from '../assets/hero.png'
@@ -27,6 +29,67 @@ import '../App.css'
 
 function HomePage() {
   const navigate = useNavigate();
+  const heroHeadline = 'Level Up Your Coding Skills';
+  const [typedHeadline, setTypedHeadline] = useState('');
+  const [isTypingDone, setIsTypingDone] = useState(false);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updatePreference = () => setPrefersReducedMotion(mediaQuery.matches);
+    updatePreference();
+
+    mediaQuery.addEventListener('change', updatePreference);
+    return () => mediaQuery.removeEventListener('change', updatePreference);
+  }, []);
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setTypedHeadline(heroHeadline);
+      setIsTypingDone(true);
+      return;
+    }
+
+    setTypedHeadline('');
+    setIsTypingDone(false);
+
+    const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+    const baseDelay = isMobile ? 68 : 54;
+    let timerId;
+    let cancelled = false;
+
+    const getNextDelay = (nextCharacter) => {
+      if (!nextCharacter) return baseDelay;
+      if (nextCharacter === ' ') return Math.round(baseDelay * 0.7);
+      if (/[.,!?]/.test(nextCharacter)) return Math.round(baseDelay * 3.4);
+      return baseDelay;
+    };
+
+    const typeNext = (currentIndex) => {
+      if (cancelled) return;
+
+      const nextIndex = currentIndex + 1;
+      setTypedHeadline(heroHeadline.slice(0, nextIndex));
+
+      if (nextIndex >= heroHeadline.length) {
+        setIsTypingDone(true);
+        return;
+      }
+
+      const nextCharacter = heroHeadline[nextIndex];
+      timerId = window.setTimeout(() => typeNext(nextIndex), getNextDelay(nextCharacter));
+    };
+
+    // A small intro delay makes the animation feel deliberate.
+    timerId = window.setTimeout(() => typeNext(0), 220);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timerId);
+    };
+  }, [heroHeadline, prefersReducedMotion]);
 
   const onStartPracticing = () => {
     if (isAuthenticated()) {
@@ -94,12 +157,45 @@ function HomePage() {
     },
   ]
 
+  // Career Track Card component with scroll animation
+  const CareerTrackCard = ({ challenge, index }) => {
+    const ref = useIntersectionObserver({
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px',
+    });
+
+    return (
+      <Link
+        ref={ref}
+        to={challenge.route}
+        className={`career-track-row ${index % 2 === 0 ? 'left-image' : 'right-image'} scroll-animate-card`}
+        style={{ '--stagger-delay': `${index * 0.15}s` }}
+      >
+        <div className="track-image-side">
+          <img src={challenge.image} alt={challenge.title} className="track-image" />
+        </div>
+        <div className="track-content-side">
+          <h3>{challenge.title}</h3>
+          <p className="track-tag">{challenge.tag}</p>
+          <p className="track-info">{challenge.info}</p>
+          <span className="track-cta">Explore Now → </span>
+        </div>
+      </Link>
+    );
+  };
+
   return (
     <main className="landing-page">
       <section className="hero-section" style={{ backgroundImage: `url(${heroImg})` }}>
         <LandingNavbar />
         <div className="hero-copy">
-          <h1>Level Up Your Coding Skills</h1>
+          <h1 className="hero-typing" aria-label={heroHeadline}>
+            <span className="hero-typing-reserve" aria-hidden="true">{heroHeadline}</span>
+            <span className="hero-typing-live-wrap" aria-hidden="true">
+              <span className="hero-typing-live">{typedHeadline}</span>
+              <span className={`hero-typing-cursor ${isTypingDone ? 'is-idle' : ''}`}>|</span>
+            </span>
+          </h1>
           <p className="subtitle">Practice, Compete, and Succeed.</p>
           <div className="hero-actions">
             <button type="button" className="btn btn-primary" onClick={onStartPracticing}>
@@ -141,21 +237,11 @@ function HomePage() {
         </div>
         <div className="challenge-tracks-container">
           {challenges.map((challenge, index) => (
-            <Link
-              to={challenge.route}
+            <CareerTrackCard
               key={challenge.title}
-              className={`career-track-row ${index % 2 === 0 ? 'left-image' : 'right-image'}`}
-            >
-              <div className="track-image-side">
-                <img src={challenge.image} alt={challenge.title} className="track-image" />
-              </div>
-              <div className="track-content-side">
-                <h3>{challenge.title}</h3>
-                <p className="track-tag">{challenge.tag}</p>
-                <p className="track-info">{challenge.info}</p>
-                <span className="track-cta">Explore Now → </span>
-              </div>
-            </Link>
+              challenge={challenge}
+              index={index}
+            />
           ))}
         </div>
       </section>

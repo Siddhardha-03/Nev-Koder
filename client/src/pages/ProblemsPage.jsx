@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { BookOpen, Edit3, Briefcase, Target, Zap, Award, TrendingUp, CheckCircle } from 'lucide-react';
 import LandingNavbar from '../components/LandingNavbar';
 import { getPublicProblems } from '../services/problemsService';
 import { getDashboardStats } from '../services/authService';
@@ -62,7 +63,7 @@ function ProblemsPage() {
                 <span className="feature-kicker">Guided</span>
                 <span className="feature-arrow">→</span>
               </div>
-              <div className="feature-icon">📚</div>
+              <span className="feature-icon"><BookOpen size={28} aria-hidden="true" /></span>
               <div className="feature-title">Learning Path</div>
               <div className="feature-subtitle">Structured roadmap from basics to advanced</div>
             </Link>
@@ -72,7 +73,7 @@ function ProblemsPage() {
                 <span className="feature-kicker">Focused</span>
                 <span className="feature-arrow">→</span>
               </div>
-              <div className="feature-icon">✏️</div>
+              <span className="feature-icon"><Edit3 size={28} aria-hidden="true" /></span>
               <div className="feature-title">Practice Sheets</div>
               <div className="feature-subtitle">Topic-wise sets to build problem-solving speed</div>
             </Link>
@@ -82,7 +83,7 @@ function ProblemsPage() {
                 <span className="feature-kicker">Career</span>
                 <span className="feature-arrow">→</span>
               </div>
-              <div className="feature-icon">💼</div>
+              <span className="feature-icon"><Briefcase size={28} aria-hidden="true" /></span>
               <div className="feature-title">Interview Prep</div>
               <div className="feature-subtitle">Company-style practice for real interview rounds</div>
             </Link>
@@ -92,7 +93,7 @@ function ProblemsPage() {
         {progressStats ? (
           <section className="progress-block">
             <div className="progress-stat-card progress-card-primary">
-              <div className="progress-stat-icon">🎯</div>
+              <span className="progress-stat-icon"><Target size={24} aria-hidden="true" /></span>
               <div className="progress-stat-content">
                 <div className="progress-stat-label">Total Solved</div>
                 <div className="progress-stat-value">{progressStats.solvedQuestions}</div>
@@ -100,7 +101,7 @@ function ProblemsPage() {
             </div>
 
             <div className="progress-stat-card progress-card-streak">
-              <div className="progress-stat-icon">🔥</div>
+              <span className="progress-stat-icon"><Zap size={24} aria-hidden="true" /></span>
               <div className="progress-stat-content">
                 <div className="progress-stat-label">Day Streak</div>
                 <div className="progress-stat-value">{progressStats.dayStreak}</div>
@@ -108,7 +109,7 @@ function ProblemsPage() {
             </div>
 
             <div className="progress-stat-card progress-card-easy">
-              <div className="progress-stat-icon">⭐</div>
+              <span className="progress-stat-icon"><Award size={24} aria-hidden="true" /></span>
               <div className="progress-stat-content">
                 <div className="progress-stat-label">Easy</div>
                 <div className="progress-stat-value">{progressStats.easyCount}</div>
@@ -116,7 +117,7 @@ function ProblemsPage() {
             </div>
 
             <div className="progress-stat-card progress-card-medium">
-              <div className="progress-stat-icon">🟠</div>
+              <span className="progress-stat-icon"><TrendingUp size={24} aria-hidden="true" /></span>
               <div className="progress-stat-content">
                 <div className="progress-stat-label">Medium</div>
                 <div className="progress-stat-value">{progressStats.mediumCount}</div>
@@ -124,7 +125,7 @@ function ProblemsPage() {
             </div>
 
             <div className="progress-stat-card progress-card-hard">
-              <div className="progress-stat-icon">🔴</div>
+              <span className="progress-stat-icon"><CheckCircle size={24} aria-hidden="true" /></span>
               <div className="progress-stat-content">
                 <div className="progress-stat-label">Hard</div>
                 <div className="progress-stat-value">{progressStats.hardCount}</div>

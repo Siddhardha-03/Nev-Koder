@@ -57,7 +57,7 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
   const [output, setOutput] = useState('Ready. Click Run to execute your code.');
   const [resultMeta, setResultMeta] = useState(null);
   const [running, setRunning] = useState(false);
-  const [editorTheme, setEditorTheme] = useState('vs-dark');
+  const [editorTheme, setEditorTheme] = useState('nevkoder-dark');
   const [submissionResults, setSubmissionResults] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [runTestResult, setRunTestResult] = useState(null);
@@ -249,6 +249,34 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
     URL.revokeObjectURL(url);
   };
 
+  const handleBeforeMount = (monaco) => {
+    monaco.editor.defineTheme('nevkoder-light', {
+      base: 'vs',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.selectionBackground': '#2f6eff59',
+        'editor.inactiveSelectionBackground': '#2f6eff40',
+        'editor.selectionHighlightBackground': '#2f6eff2b',
+        'editor.lineHighlightBackground': '#2f6eff17',
+        'editor.lineHighlightBorder': '#00000000'
+      }
+    });
+
+    monaco.editor.defineTheme('nevkoder-dark', {
+      base: 'vs-dark',
+      inherit: true,
+      rules: [],
+      colors: {
+        'editor.selectionBackground': '#4f9ff582',
+        'editor.inactiveSelectionBackground': '#4f9ff561',
+        'editor.selectionHighlightBackground': '#4f9ff545',
+        'editor.lineHighlightBackground': '#4f9ff526',
+        'editor.lineHighlightBorder': '#00000000'
+      }
+    });
+  };
+
   return (
     <section className="compiler-shell">
       {!isEmbedded && <LandingNavbar />}
@@ -258,8 +286,12 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
           <div className="compiler-panel-header">
             <span>Editor</span>
             <div className="compiler-actions">
-              <button type="button" className="compiler-btn compiler-btn-clear" onClick={() => setEditorTheme((prev) => (prev === 'vs-dark' ? 'vs-light' : 'vs-dark'))}>
-                {editorTheme === 'vs-dark' ? 'Light' : 'Dark'} Theme
+              <button
+                type="button"
+                className="compiler-btn compiler-btn-clear"
+                onClick={() => setEditorTheme((prev) => (prev === 'nevkoder-dark' ? 'nevkoder-light' : 'nevkoder-dark'))}
+              >
+                {editorTheme === 'nevkoder-dark' ? 'Light' : 'Dark'} Theme
               </button>
               <button type="button" className="compiler-btn compiler-btn-clear" onClick={handleDownloadCode}>
                 <Download size={15} /> Download
@@ -302,6 +334,7 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
             height="clamp(340px, 78vh, 980px)"
             className="monaco-container"
             theme={editorTheme}
+            beforeMount={handleBeforeMount}
             language={languageConfig.monaco}
             defaultValue={code}
             onChange={(value) => setCode(value || '')}
@@ -323,7 +356,11 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
               acceptSuggestionOnCommitCharacter: false,
               acceptSuggestionOnEnter: 'off',
               tabCompletion: 'off',
-              tabSize: 2
+              tabSize: 2,
+              renderLineHighlight: 'all',
+              selectionHighlight: true,
+              renderLineHighlightOnlyWhenFocus: false,
+              occurrencesHighlight: 'off'
             }}
           />
         </article>

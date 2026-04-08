@@ -1,3 +1,4 @@
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import CompilerPage from './pages/CompilerPage'
 import HomePage from './pages/HomePage'
@@ -12,10 +13,53 @@ import DashboardPage from './pages/DashboardPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import AdminQuestionsPage from './pages/admin/AdminQuestionsPage'
 import AdminLearningPathsPage from './pages/admin/AdminLearningPathsPage'
+import AdminUsersPage from './pages/admin/AdminUsersPage'
+import AdminAssessmentsPage from './pages/admin/AdminAssessmentsPage'
 import LearningPathPage from './pages/LearningPathPage'
 import PracticeSheetsPage from './pages/PracticeSheetsPage'
 import InterviewPrepPage from './pages/InterviewPrepPage'
 import { getStoredUser, isAuthenticated } from './services/authService'
+import GlobalLoader from './components/GlobalLoader'
+
+const LOADER_MIN_DURATION_MS = 500
+const LOADER_FADE_DURATION_MS = 280
+const LOADER_MAX_WAIT_MS = 6500
+
+const wait = (duration) => new Promise((resolve) => {
+  window.setTimeout(resolve, duration)
+})
+
+const waitForImages = () => {
+  const images = Array.from(document.querySelectorAll('img:not([data-loader-ignore="true"])'))
+  const pending = images.filter((image) => !image.complete)
+
+  if (pending.length === 0) {
+    return Promise.resolve()
+  }
+
+  return Promise.all(pending.map((image) => new Promise((resolve) => {
+    image.addEventListener('load', resolve, { once: true })
+    image.addEventListener('error', resolve, { once: true })
+  }))).then(() => undefined)
+}
+
+const waitForWindowLoad = () => {
+  if (document.readyState === 'complete') {
+    return Promise.resolve()
+  }
+
+  return new Promise((resolve) => {
+    window.addEventListener('load', resolve, { once: true })
+  })
+}
+
+const waitForFonts = () => {
+  if (!document.fonts?.ready) {
+    return Promise.resolve()
+  }
+
+  return document.fonts.ready
+}
 
 function ProtectedRoute({ children }) {
   const location = useLocation()
@@ -42,58 +86,133 @@ function AdminRoute({ children }) {
   return children
 }
 
+function AppRouterShell() {
+  const location = useLocation()
+  const loadCycleRef = useRef(0)
+  const [showLoader, setShowLoader] = useState(true)
+  const [isFading, setIsFading] = useState(false)
+
+  useLayoutEffect(() => {
+    loadCycleRef.current += 1
+    setShowLoader(true)
+    setIsFading(false)
+  }, [location.key])
+
+  useEffect(() => {
+    const cycleId = loadCycleRef.current
+    const startedAt = performance.now()
+    let revealTimer
+    let fadeTimer
+
+    const reveal = () => {
+      if (cycleId !== loadCycleRef.current) return
+
+      const elapsed = performance.now() - startedAt
+      const remaining = Math.max(0, LOADER_MIN_DURATION_MS - elapsed)
+
+      revealTimer = window.setTimeout(() => {
+        if (cycleId !== loadCycleRef.current) return
+
+        setIsFading(true)
+
+        fadeTimer = window.setTimeout(() => {
+          if (cycleId !== loadCycleRef.current) return
+          setShowLoader(false)
+          setIsFading(false)
+        }, LOADER_FADE_DURATION_MS)
+      }, remaining)
+    }
+
+    Promise.race([
+      Promise.all([waitForWindowLoad(), waitForFonts(), waitForImages()]),
+      wait(LOADER_MAX_WAIT_MS)
+    ]).then(reveal)
+
+    return () => {
+      if (revealTimer) window.clearTimeout(revealTimer)
+      if (fadeTimer) window.clearTimeout(fadeTimer)
+    }
+  }, [location.key])
+
+  return (
+    <>
+      <div className={`app-route-shell${showLoader ? ' app-route-shell-hidden' : ''}`}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
+          <Route path="/problems" element={<ProblemsPage />} />
+          <Route path="/problems/:id" element={<ProblemPage />} />
+          <Route path="/compiler" element={<CompilerPage />} />
+          <Route path="/learning-paths" element={<LearningPathPage />} />
+          <Route path="/learning-paths/:id" element={<LearningPathPage />} />
+          <Route path="/practice-sheets" element={<PracticeSheetsPage />} />
+          <Route path="/interview-prep" element={<InterviewPrepPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/verify-otp" element={<OTPVerificationPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route
+            path="/dashboard"
+            element={(
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/admin/dashboard"
+            element={(
+              <AdminRoute>
+                <AdminDashboardPage />
+              </AdminRoute>
+            )}
+          />
+          <Route
+            path="/admin/questions"
+            element={(
+              <AdminRoute>
+                <AdminQuestionsPage />
+              </AdminRoute>
+            )}
+          />
+          <Route
+            path="/admin/learning-paths"
+            element={(
+              <AdminRoute>
+                <AdminLearningPathsPage />
+              </AdminRoute>
+            )}
+          />
+          <Route
+            path="/admin/users"
+            element={(
+              <AdminRoute>
+                <AdminUsersPage />
+              </AdminRoute>
+            )}
+          />
+          <Route
+            path="/admin/assessments"
+            element={(
+              <AdminRoute>
+                <AdminAssessmentsPage />
+              </AdminRoute>
+            )}
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+
+      {showLoader ? <GlobalLoader fading={isFading} /> : null}
+    </>
+  )
+}
+
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/home" element={<Navigate to="/" replace />} />
-        <Route path="/problems" element={<ProblemsPage />} />
-        <Route path="/problems/:id" element={<ProblemPage />} />
-        <Route path="/compiler" element={<CompilerPage />} />
-        <Route path="/learning-paths" element={<LearningPathPage />} />
-        <Route path="/learning-paths/:id" element={<LearningPathPage />} />
-        <Route path="/practice-sheets" element={<PracticeSheetsPage />} />
-        <Route path="/interview-prep" element={<InterviewPrepPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/verify-otp" element={<OTPVerificationPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route
-          path="/dashboard"
-          element={(
-            <ProtectedRoute>
-              <DashboardPage />
-            </ProtectedRoute>
-          )}
-        />
-        <Route
-          path="/admin/dashboard"
-          element={(
-            <AdminRoute>
-              <AdminDashboardPage />
-            </AdminRoute>
-          )}
-        />
-        <Route
-          path="/admin/questions"
-          element={(
-            <AdminRoute>
-              <AdminQuestionsPage />
-            </AdminRoute>
-          )}
-        />
-        <Route
-          path="/admin/learning-paths"
-          element={(
-            <AdminRoute>
-              <AdminLearningPathsPage />
-            </AdminRoute>
-          )}
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AppRouterShell />
     </BrowserRouter>
   )
 }

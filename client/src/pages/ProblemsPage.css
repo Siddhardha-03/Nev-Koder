@@ -45,8 +45,38 @@
 }
 
 .progress-stat-icon {
-  font-size: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   flex-shrink: 0;
+}
+
+.progress-card-primary .progress-stat-icon {
+  background: linear-gradient(135deg, #c5dff8 0%, #e8f1ff 100%);
+  color: #0052cc;
+}
+
+.progress-card-streak .progress-stat-icon {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fff3cc 100%);
+  color: #ff9800;
+}
+
+.progress-card-easy .progress-stat-icon {
+  background: linear-gradient(135deg, #a7f3d0 0%, #e6ffed 100%);
+  color: #059669;
+}
+
+.progress-card-medium .progress-stat-icon {
+  background: linear-gradient(135deg, #ffcc99 0%, #ffeccc 100%);
+  color: #d97706;
+}
+
+.progress-card-hard .progress-stat-icon {
+  background: linear-gradient(135deg, #ffb3b3 0%, #ffcccc 100%);
+  color: #dc2626;
 }
 
 .progress-stat-content {
@@ -211,8 +241,28 @@
 }
 
 .feature-icon {
-  font-size: 1.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
+  color: inherit;
   margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.progress-card-learning .feature-icon {
+  color: #2457d6;
+}
+
+.progress-card-practice .feature-icon {
+  color: #f06f16;
+}
+
+.progress-card-interview .feature-icon {
+  color: #009c8f;
 }
 
 .feature-title {

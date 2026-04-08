@@ -189,3 +189,57 @@ export const downloadTemplateNoBoilerplate = async () => {
     return extractError(error, 'Failed to download no-boilerplate template.');
   }
 };
+
+export const getAdminUsers = async () => {
+  try {
+    const response = await adminApi.get('/admin/users');
+    return response.data;
+  } catch (error) {
+    return extractError(error, 'Failed to fetch users.');
+  }
+};
+
+export const createAdminUser = async (payload) => {
+  try {
+    const response = await adminApi.post('/admin/users', payload);
+    return response.data;
+  } catch (error) {
+    return extractError(error, 'Failed to create user.');
+  }
+};
+
+export const deleteAdminUser = async (id) => {
+  try {
+    const response = await adminApi.delete(`/admin/users/${id}`);
+    return response.data;
+  } catch (error) {
+    return extractError(error, 'Failed to delete user.');
+  }
+};
+
+export const getAdminAssessments = async () => {
+  try {
+    const response = await adminApi.get('/admin/assessments');
+    return response.data;
+  } catch (error) {
+    return extractError(error, 'Failed to fetch assessments.');
+  }
+};
+
+export const createAdminAssessment = async (payload) => {
+  try {
+    const response = await adminApi.post('/admin/assessments', payload);
+    return response.data;
+  } catch (error) {
+    return extractError(error, 'Failed to create assessment.');
+  }
+};
+
+export const deleteAdminAssessment = async (id) => {
+  try {
+    const response = await adminApi.delete(`/admin/assessments/${id}`);
+    return response.data;
+  } catch (error) {
+    return extractError(error, 'Failed to delete assessment.');
+  }
+};

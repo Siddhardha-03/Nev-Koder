@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes.js';
 import executeRoutes from './routes/execute.js';
 import questionRoutes from './routes/questions.js';
 import learningPathRoutes from './routes/learningPaths.js';
+import adminRoutes from './routes/admin.js';
 import { corsMiddleware, errorHandler } from './middlewares/authMiddleware.js';
 import pool from './config/database.js';
 import './firebaseAdmin.js';
@@ -58,6 +59,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/execute', executeRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/learning-paths', learningPathRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((req, res) => {

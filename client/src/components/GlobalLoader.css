@@ -1,0 +1,62 @@
+.global-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: #f9fbff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 280ms ease;
+}
+
+.global-loader-overlay-fading {
+  opacity: 0;
+}
+
+.global-loader-card {
+  display: grid;
+  place-items: center;
+  gap: 0.9rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+.global-loader-logo {
+  width: clamp(92px, 16vw, 132px);
+  height: auto;
+  object-fit: contain;
+}
+
+.global-loader-spinner {
+  width: 42px;
+  height: 42px;
+  border: 3px solid #d8e4fb;
+  border-top-color: #255ad2;
+  border-radius: 50%;
+  animation: globalSpin 0.9s linear infinite;
+}
+
+.global-loader-card p {
+  margin: 0;
+  color: #3f5d90;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.app-route-shell {
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+
+.app-route-shell-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes globalSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

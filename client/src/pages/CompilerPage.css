@@ -258,6 +258,48 @@
   to { transform: rotate(360deg); }
 }
 
+/* Selection highlighting in Monaco editor */
+.compiler-editor .monaco-editor .selected-text {
+  background-color: rgba(37, 90, 210, 0.4) !important;
+  color: inherit !important;
+}
+
+.compiler-editor .monaco-editor .view-line .selected-text,
+.compiler-editor .monaco-editor .view-line > span::selection {
+  background-color: rgba(37, 90, 210, 0.5) !important;
+  color: inherit !important;
+}
+
+/* Highlight current line with selection */
+.compiler-editor .monaco-editor .current-line {
+  background: rgba(37, 90, 210, 0.08) !important;
+}
+
+.compiler-editor .monaco-editor.focused .current-line {
+  background: rgba(37, 90, 210, 0.12) !important;
+}
+
+/* Selection in dark theme */
+.compiler-editor .monaco-editor.vs-dark .selected-text {
+  background-color: rgba(79, 159, 245, 0.5) !important;
+}
+
+.compiler-editor .monaco-editor.nevkoder-dark .selected-text {
+  background-color: rgba(79, 159, 245, 0.5) !important;
+}
+
+.compiler-editor .monaco-editor.nevkoder-light .selected-text {
+  background-color: rgba(37, 90, 210, 0.4) !important;
+}
+
+.compiler-editor .monaco-editor.vs-dark .current-line {
+  background: rgba(79, 159, 245, 0.1) !important;
+}
+
+.compiler-editor .monaco-editor.vs-dark.focused .current-line {
+  background: rgba(79, 159, 245, 0.15) !important;
+}
+
 .output-section {
   display: flex;
   flex-direction: column;
