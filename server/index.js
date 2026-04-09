@@ -48,6 +48,9 @@ app.get('/', (req, res) => {
       executePreview: '/api/execute/preview',
       questions: '/api/questions',
       publicQuestions: '/api/questions/public',
+      adminBase: '/api/admin',
+      adminUsers: '/api/admin/users',
+      adminAssessments: '/api/admin/assessments',
       register: '/api/auth/register',
       login: '/api/auth/login'
     }
@@ -59,17 +62,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/execute', executeRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/learning-paths', learningPathRoutes);
-app.use('/api/admin', adminRoutes);
-
-// Defensive alias so /api/admin/users resolves even if the mount path changes in deployment
-// This keeps the public endpoint stable across proxies and server restarts.
-const adminUsersAlias = express.Router();
-adminUsersAlias.use((req, _res, next) => {
-  req.url = req.url === '/' ? '/users' : `/users${req.url}`;
-  next();
-});
-adminUsersAlias.use(adminRoutes);
-app.use('/api/admin/users', adminUsersAlias);
+app.use(['/api/admin', '/admin'], adminRoutes);
 
 // 404 handler
 app.use((req, res) => {
