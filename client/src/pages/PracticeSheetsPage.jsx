@@ -2,10 +2,36 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandingNavbar from '../components/LandingNavbar';
 import { isAuthenticated } from '../services/authService';
+import { useSeoMeta } from '../hooks/useSeoMeta';
 import './PracticeSheetsPage.css';
 
 function PracticeSheetsPage() {
   const navigate = useNavigate();
+  useSeoMeta({
+    title: 'Practice Sheets | NevKoder Coding Sheets for DSA Practice',
+    description: 'Use NevKoder practice sheets to learn coding online with topic-wise coding sheets, DSA practice, and coding interview preparation.',
+    keywords: [
+      'NevKoder',
+      'nevkoder',
+      'nev-koder',
+      'Nev-Koder',
+      'coding practice platform',
+      'coding interview preparation',
+      'online coding compiler',
+      'DSA practice',
+      'programming problems',
+      'coding sheets',
+      'learn coding online'
+    ],
+    canonicalPath: '/practice-sheets',
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Practice Sheets | NevKoder',
+      url: `${window.location.origin}/practice-sheets`,
+      description: 'Structured coding sheets for DSA practice and interview preparation on NevKoder.'
+    }
+  });
   const [sheets] = useState([
     {
       id: 1,

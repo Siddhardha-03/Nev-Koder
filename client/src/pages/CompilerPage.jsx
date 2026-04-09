@@ -3,6 +3,7 @@ import Editor from '@monaco-editor/react';
 import { Play, RotateCcw, Download, Github, Linkedin, Mail, MapPin, Phone } from 'lucide-react';
 import { executeCode, runTestCase, submitSolution } from '../services/compilerService';
 import LandingNavbar from '../components/LandingNavbar';
+import { useSeoMeta } from '../hooks/useSeoMeta';
 import defaultLogo from '../assets/logo_nev_new.svg';
 import '../App.css';
 import './CompilerPage.css';
@@ -50,6 +51,29 @@ const getProblemScaffold = (problem, languageKey) => {
 function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult = () => {}, hideEmbeddedOutput = false }) {
   const isEmbedded = Boolean(problem);
   const hideOutputPanel = hideEmbeddedOutput || isEmbedded;
+  useSeoMeta({
+    title: 'Online Coding Compiler | NevKoder',
+    description: 'NevKoder offers an online coding compiler for writing, running, and debugging code across multiple languages with a clean and professional IDE experience.',
+    keywords: [
+      'NevKoder',
+      'nevkoder',
+      'nev-koder',
+      'Nev-Koder',
+      'coding practice platform',
+      'coding interview preparation',
+      'online coding compiler',
+      'DSA practice',
+      'learn coding online'
+    ],
+    canonicalPath: '/compiler',
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Online Coding Compiler | NevKoder',
+      url: `${window.location.origin}/compiler`,
+      description: 'A fast online coding compiler on NevKoder for students and developers.'
+    }
+  });
   const [language, setLanguage] = useState('python');
   const [code, setCode] = useState(getLanguageConfig('python').template);
   const [editorSessionKey, setEditorSessionKey] = useState(0);

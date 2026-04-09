@@ -4,10 +4,35 @@ import { BookOpen, Edit3, Briefcase, Target, Zap, Award, TrendingUp, CheckCircle
 import LandingNavbar from '../components/LandingNavbar';
 import { getPublicProblems } from '../services/problemsService';
 import { getDashboardStats } from '../services/authService';
+import { useSeoMeta } from '../hooks/useSeoMeta';
 import './ProblemsPage.css';
 
 function ProblemsPage() {
   const navigate = useNavigate();
+  useSeoMeta({
+    title: 'Problems | NevKoder Coding Practice Platform',
+    description: 'Solve programming problems on NevKoder, the coding practice platform for DSA practice, coding interview preparation, and learn coding online workflows.',
+    keywords: [
+      'NevKoder',
+      'nevkoder',
+      'nev-koder',
+      'Nev-Koder',
+      'coding practice platform',
+      'coding interview preparation',
+      'online coding compiler',
+      'DSA practice',
+      'programming problems',
+      'learn coding online'
+    ],
+    canonicalPath: '/problems',
+    structuredData: {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'Problems | NevKoder',
+      url: `${window.location.origin}/problems`,
+      description: 'Practice programming problems on NevKoder with filters, solved status, and difficulty levels.'
+    }
+  });
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [tag, setTag] = useState('');

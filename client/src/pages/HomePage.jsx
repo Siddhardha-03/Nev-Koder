@@ -29,6 +29,74 @@ import '../App.css'
 
 function HomePage() {
   const navigate = useNavigate();
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    const title = 'NevKoder | Coding Practice Platform, Compiler & Interview Prep';
+    const description = 'NevKoder is a modern coding practice platform designed to help developers practice, learn, and prepare for interviews with programming problems, coding sheets, an online compiler, and assessments.';
+    const keywords = 'NevKoder, nevkoder, nev-koder, Nev-Koder, coding practice platform, coding interview preparation, online coding compiler, DSA practice, programming problems, coding sheets, learn coding online';
+
+    document.title = title;
+
+    const setMetaTag = (selector, attributes) => {
+      let element = document.head.querySelector(selector);
+      if (!element) {
+        element = document.createElement('meta');
+        Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+        document.head.appendChild(element);
+      }
+      return element;
+    };
+
+    setMetaTag('meta[name="description"]', { name: 'description' }).setAttribute('content', description);
+    setMetaTag('meta[name="keywords"]', { name: 'keywords' }).setAttribute('content', keywords);
+    setMetaTag('meta[property="og:title"]', { property: 'og:title' }).setAttribute('content', title);
+    setMetaTag('meta[property="og:description"]', { property: 'og:description' }).setAttribute('content', description);
+    setMetaTag('meta[name="twitter:title"]', { name: 'twitter:title' }).setAttribute('content', title);
+    setMetaTag('meta[name="twitter:description"]', { name: 'twitter:description' }).setAttribute('content', description);
+
+    const canonicalHref = `${window.location.origin}/`;
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute('href', canonicalHref);
+
+    const scriptId = 'nevkoder-json-ld';
+    let script = document.head.querySelector(`#${scriptId}`);
+    if (!script) {
+      script = document.createElement('script');
+      script.id = scriptId;
+      script.type = 'application/ld+json';
+      document.head.appendChild(script);
+    }
+
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'NevKoder',
+      alternateName: ['nevkoder', 'nev-koder', 'Nev-Koder'],
+      url: canonicalHref,
+      description,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${canonicalHref}problems?search={search_term_string}`,
+        'query-input': 'required name=search_term_string'
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'NevKoder',
+        alternateName: ['nevkoder', 'nev-koder', 'Nev-Koder']
+      }
+    });
+
+    return () => {
+      const existingScript = document.head.querySelector(`#${scriptId}`);
+      if (existingScript) existingScript.remove();
+    };
+  }, []);
   const heroHeadline = 'Level Up Your Coding Skills';
   const [typedHeadline, setTypedHeadline] = useState('');
   const [isTypingDone, setIsTypingDone] = useState(false);
