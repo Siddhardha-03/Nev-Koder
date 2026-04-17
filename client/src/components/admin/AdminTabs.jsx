@@ -17,6 +17,11 @@ const tabs = [
     description: 'Design structured practice journeys'
   },
   {
+    to: '/admin/quizzes',
+    label: 'Quizzes',
+    description: 'Create proctored and non-proctored quizzes'
+  },
+  {
     to: '/admin/users',
     label: 'User Management',
     description: 'Add, verify, and control platform users'

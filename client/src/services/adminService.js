@@ -243,3 +243,28 @@ export const deleteAdminAssessment = async (id) => {
     return extractError(error, 'Failed to delete assessment.');
   }
 };
+
+export const exportAdminQuizResults = async (quizId) => {
+  try {
+    const response = await adminApi.get(`/admin/quizzes/${quizId}/export`, {
+      responseType: 'blob'
+    });
+
+    const contentDisposition = response.headers['content-disposition'] || '';
+    const match = contentDisposition.match(/filename="?([^";]+)"?/i);
+    const filename = match ? match[1] : `quiz-${quizId}-results.xlsx`;
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    return { success: true };
+  } catch (error) {
+    return extractError(error, 'Failed to export quiz results.');
+  }
+};

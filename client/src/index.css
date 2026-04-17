@@ -1,9 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap');
-
 :root {
   /* Typography */
-  --font-base: 'Manrope', 'Segoe UI', sans-serif;
-  --font-heading: 'Sora', 'Trebuchet MS', sans-serif;
+  --font-base: 'Work Sans', 'Segoe UI', sans-serif;
+  --font-heading: 'Trispace', 'Trebuchet MS', sans-serif;
 
   /* Colors */
   --color-primary: #006bff;

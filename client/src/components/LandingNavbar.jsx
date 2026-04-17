@@ -59,8 +59,8 @@ function LandingNavbar() {
         <nav className="menu-links" aria-label="Main navigation">
           <NavLink to="/" onClick={() => setIsMobileMenuOpen(false)}>Home</NavLink>
           <NavLink to="/problems" onClick={() => setIsMobileMenuOpen(false)}>Problems</NavLink>
-          <a href="#" onClick={() => setIsMobileMenuOpen(false)}>Assessments</a>
-          <a href="#" onClick={() => setIsMobileMenuOpen(false)}>Quizzes</a>
+          <NavLink to="/assessments" onClick={() => setIsMobileMenuOpen(false)}>Assessments</NavLink>
+          <NavLink to="/quizzes" onClick={() => setIsMobileMenuOpen(false)}>Quizzes</NavLink>
           <NavLink to="/compiler" onClick={() => setIsMobileMenuOpen(false)}>Compiler</NavLink>
           {isAdmin ? <NavLink to="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)}>Admin</NavLink> : null}
         </nav>

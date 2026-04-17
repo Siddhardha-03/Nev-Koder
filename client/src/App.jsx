@@ -18,8 +18,12 @@ import AdminAssessmentsPage from './pages/admin/AdminAssessmentsPage'
 import LearningPathPage from './pages/LearningPathPage'
 import PracticeSheetsPage from './pages/PracticeSheetsPage'
 import InterviewPrepPage from './pages/InterviewPrepPage'
+import QuizzesPage from './pages/QuizzesPage'
+import QuizAttemptPage from './pages/QuizAttemptPage'
+import QuizResultPage from './pages/QuizResultPage'
 import { getStoredUser, isAuthenticated } from './services/authService'
 import GlobalLoader from './components/GlobalLoader'
+import AdminQuizzesPage from './pages/admin/AdminQuizzesPage'
 
 const LOADER_MIN_DURATION_MS = 500
 const LOADER_FADE_DURATION_MS = 280
@@ -147,6 +151,7 @@ function AppRouterShell() {
           <Route path="/learning-paths/:id" element={<LearningPathPage />} />
           <Route path="/practice-sheets" element={<PracticeSheetsPage />} />
           <Route path="/interview-prep" element={<InterviewPrepPage />} />
+          <Route path="/quizzes" element={<QuizzesPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/verify-otp" element={<OTPVerificationPage />} />
@@ -157,6 +162,22 @@ function AppRouterShell() {
             element={(
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/quizzes/attempts/:attemptId"
+            element={(
+              <ProtectedRoute>
+                <QuizAttemptPage />
+              </ProtectedRoute>
+            )}
+          />
+          <Route
+            path="/quizzes/attempts/:attemptId/result"
+            element={(
+              <ProtectedRoute>
+                <QuizResultPage />
               </ProtectedRoute>
             )}
           />
@@ -181,6 +202,14 @@ function AppRouterShell() {
             element={(
               <AdminRoute>
                 <AdminLearningPathsPage />
+              </AdminRoute>
+            )}
+          />
+          <Route
+            path="/admin/quizzes"
+            element={(
+              <AdminRoute>
+                <AdminQuizzesPage />
               </AdminRoute>
             )}
           />

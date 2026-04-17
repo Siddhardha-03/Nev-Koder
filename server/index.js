@@ -7,6 +7,7 @@ import executeRoutes from './routes/execute.js';
 import questionRoutes from './routes/questions.js';
 import learningPathRoutes from './routes/learningPaths.js';
 import adminRoutes from './routes/admin.js';
+import quizRoutes from './routes/quizzes.js';
 import { corsMiddleware, errorHandler } from './middlewares/authMiddleware.js';
 import pool from './config/database.js';
 import './firebaseAdmin.js';
@@ -48,6 +49,10 @@ app.get('/', (req, res) => {
       executePreview: '/api/execute/preview',
       questions: '/api/questions',
       publicQuestions: '/api/questions/public',
+      quizzes: '/api/quizzes/public',
+      quizStart: '/api/quizzes/:id/start',
+      quizAttempt: '/api/quizzes/attempts/:attemptId',
+      quizSubmit: '/api/quizzes/attempts/:attemptId/submit',
       adminBase: '/api/admin',
       adminUsers: '/api/admin/users',
       adminAssessments: '/api/admin/assessments',
@@ -62,6 +67,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/execute', executeRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/learning-paths', learningPathRoutes);
+app.use(['/api/quizzes', '/quizzes'], quizRoutes);
 app.use(['/api/admin', '/admin'], adminRoutes);
 
 // 404 handler
