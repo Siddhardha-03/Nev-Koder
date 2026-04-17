@@ -77,7 +77,7 @@ router.get('/public', verifyTokenOptional, async (req, res) => {
       `SELECT id, title, function_name, description, difficulty, question_type, parameter_schema, tags, examples, has_boilerplate, created_at, updated_at
        FROM questions
        ${whereClause}
-       ORDER BY updated_at DESC`,
+       ORDER BY created_at ASC`,
       values
     );
 

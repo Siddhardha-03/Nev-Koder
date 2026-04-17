@@ -193,6 +193,7 @@ function ProblemsPage() {
         {!loading && normalizedProblems.length > 0 ? (
           <section className="problems-list" aria-label="Problems list">
             <div className="problems-list-head" role="row">
+              <span>#</span>
               <span>Title</span>
               <span>Difficulty</span>
               <span>Type</span>
@@ -209,13 +210,13 @@ function ProblemsPage() {
                   onClick={() => navigate(`/problems/${problem.id}`)}
                   style={{ cursor: 'pointer' }}
                 >
+                  <div className="problems-row-number">{index + 1}.</div>
+
                   <div className="problems-row-title">
-                    <div className="problems-row-number">{index + 1}.</div>
                     <h3>
                       {problem.title}
                       {problem.solved ? <span className="problems-solved-pill">Solved</span> : null}
                     </h3>
-                    <p>{String(problem.description || '').slice(0, 120)}...</p>
                   </div>
 
                   <div className="problems-row-cell">
