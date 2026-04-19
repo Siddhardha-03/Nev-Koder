@@ -360,6 +360,72 @@ router.get('/quizzes', verifyToken, requireAdmin, async (_req, res) => {
   }
 });
 
+router.get('/quizzes/:id', verifyToken, requireAdmin, async (req, res) => {
+  const quizId = Number(req.params.id);
+  if (!Number.isInteger(quizId) || quizId <= 0) {
+    return res.status(400).json({ success: false, message: 'Invalid quiz id' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    const [[quiz]] = await connection.execute(
+      `SELECT id,
+              title,
+              description,
+              difficulty,
+              is_proctored,
+              scheduling_enabled,
+              available_from_utc,
+              available_until_utc,
+              time_limit_minutes,
+              passing_score,
+              max_attempts,
+              auto_submit_on_violation,
+              violation_auto_submit_threshold,
+              status,
+              created_at,
+              updated_at
+       FROM quizzes
+       WHERE id = ?`,
+      [quizId]
+    );
+
+    if (!quiz) {
+      return res.status(404).json({ success: false, message: 'Quiz not found' });
+    }
+
+    const [questionRows] = await connection.execute(
+      `SELECT COUNT(*) AS question_count
+       FROM quiz_questions
+       WHERE quiz_id = ?`,
+      [quizId]
+    );
+
+    return res.json({
+      success: true,
+      quiz: {
+        ...quiz,
+        question_count: Number(questionRows[0]?.question_count || 0),
+        is_proctored: Boolean(quiz.is_proctored),
+        scheduling_enabled: Boolean(quiz.scheduling_enabled),
+        available_from_utc: parseStoredUtcDate(quiz.available_from_utc)?.toISOString() || null,
+        available_until_utc: parseStoredUtcDate(quiz.available_until_utc)?.toISOString() || null,
+        auto_submit_on_violation: Boolean(quiz.auto_submit_on_violation),
+        max_attempts: Number(quiz.max_attempts || 0),
+        time_limit_minutes: Number(quiz.time_limit_minutes || 0),
+        passing_score: Number(quiz.passing_score || 0),
+        violation_auto_submit_threshold: quiz.violation_auto_submit_threshold === null
+          ? null
+          : Number(quiz.violation_auto_submit_threshold)
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch quiz details', error: error.message });
+  } finally {
+    connection.release();
+  }
+});
+
 router.post('/quizzes', verifyToken, requireAdmin, async (req, res) => {
   const {
     title,
