@@ -21,6 +21,20 @@
   gap: 0.6rem;
 }
 
+.compiler-font-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.compiler-font-size-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #1f3b66;
+  min-width: 44px;
+  text-align: center;
+}
+
 .compiler-btn {
   border: 0;
   border-radius: 10px;

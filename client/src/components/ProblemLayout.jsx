@@ -17,6 +17,7 @@ function ProblemLayout({ problem }) {
     resultMeta: null
   });
   const [activeOutputTab, setActiveOutputTab] = useState('testResults');
+  const [showSuccessCelebration, setShowSuccessCelebration] = useState(false);
 
   const containerRef = useRef(null);
   const rightRef = useRef(null);
@@ -89,6 +90,24 @@ function ProblemLayout({ problem }) {
     };
   }, [isResizingBottom]);
 
+  useEffect(() => {
+    if (!showSuccessCelebration) return undefined;
+
+    const timer = setTimeout(() => {
+      setShowSuccessCelebration(false);
+    }, 3200);
+
+    return () => clearTimeout(timer);
+  }, [showSuccessCelebration]);
+
+  const submissionSummary = outputInfo.submissionResults?.summary || null;
+  const failedSubmissionCases = (outputInfo.submissionResults?.results || []).filter((item) => !item.passed);
+  const isSubmissionAccepted = Boolean(
+    submissionSummary
+    && Number(submissionSummary.totalTestCases || 0) > 0
+    && Number(submissionSummary.failCount || 0) === 0
+  );
+
   return (
     <div className="problem-layout-shell" ref={containerRef}>
       <div className="problem-left-pane" style={{ width: `${leftPaneWidth}%` }}>
@@ -121,6 +140,13 @@ function ProblemLayout({ problem }) {
                   setOutputInfo((prev) => ({ ...prev, submissionResults }));
                   setActiveOutputTab('submission');
                   setRightBottomPercentage((prev) => Math.max(prev, 45));
+                  if (
+                    submissionResults?.summary
+                    && Number(submissionResults.summary.totalTestCases || 0) > 0
+                    && Number(submissionResults.summary.failCount || 0) === 0
+                  ) {
+                    setShowSuccessCelebration(true);
+                  }
                 }}
               />
             </div>
@@ -195,35 +221,57 @@ function ProblemLayout({ problem }) {
 
               {activeOutputTab === 'submission' && (
                 <>
-                  {outputInfo.runTestResult ? (
-                    <>
-                      <div className="output-row">Status: {outputInfo.runTestResult.passed ? '✅ Passed' : '❌ Failed'}</div>
-                      <div className="output-row">Expected: {outputInfo.runTestResult.expected}</div>
-                      <div className="output-row">Actual: {outputInfo.runTestResult.actual}</div>
-                      <div className="output-row">Time: {outputInfo.runTestResult.time}</div>
-                      <div className="output-row">Memory: {outputInfo.runTestResult.memory}</div>
-                    </>
-                  ) : (
-                    <div className="output-row">No test data available; run your code first.</div>
-                  )}
-                </>
-              )}
-
-              {activeOutputTab === 'submission' && (
-                <>
                   {outputInfo.submissionResults ? (
                     <>
-                      <div className="output-row">
-                        Total: {outputInfo.submissionResults.summary.totalTestCases},
-                        Passed: {outputInfo.submissionResults.summary.passCount},
-                        Failed: {outputInfo.submissionResults.summary.failCount},
-                        Success: {outputInfo.submissionResults.summary.passPercentage}%
-                      </div>
-                      {outputInfo.submissionResults.results?.map((item, index) => (
-                        <div key={index} className="output-row">
-                          Case {index + 1}: {item.passed ? '✅' : '❌'} | Input: {item.input || 'N/A'} | Expected: {item.expected} | Actual: {item.actual}
+                      <div className="submission-premium-wrap">
+                        <div className={`submission-status-banner ${isSubmissionAccepted ? 'accepted' : 'failed'}`}>
+                          <div className="submission-status-title">
+                            {isSubmissionAccepted ? 'Accepted' : 'Submission Failed'}
+                          </div>
+                          <div className="submission-status-subtitle">
+                            {isSubmissionAccepted
+                              ? 'Excellent work. Your solution passed every test case.'
+                              : 'Review the failed cases below and refine your approach.'}
+                          </div>
                         </div>
-                      ))}
+
+                        <div className="submission-summary-grid">
+                          <div className="submission-stat-card">
+                            <div className="submission-stat-label">Total Cases</div>
+                            <div className="submission-stat-value">{submissionSummary?.totalTestCases ?? 0}</div>
+                          </div>
+                          <div className="submission-stat-card success">
+                            <div className="submission-stat-label">Passed Cases</div>
+                            <div className="submission-stat-value">{submissionSummary?.passCount ?? 0}</div>
+                          </div>
+                          <div className="submission-stat-card failure">
+                            <div className="submission-stat-label">Failed Cases</div>
+                            <div className="submission-stat-value">{submissionSummary?.failCount ?? 0}</div>
+                          </div>
+                          <div className="submission-stat-card">
+                            <div className="submission-stat-label">Success Rate</div>
+                            <div className="submission-stat-value">{submissionSummary?.passPercentage ?? 0}%</div>
+                          </div>
+                        </div>
+
+                        {failedSubmissionCases.length > 0 ? (
+                          <div className="submission-failed-list">
+                            {failedSubmissionCases.map((item, index) => (
+                              <div key={`${item.testCaseId || index}-${index}`} className="submission-case-card">
+                                <div className="submission-case-title">Failed Case {index + 1}</div>
+                                <div className="submission-case-line"><strong>Input:</strong> {item.input || 'N/A'}</div>
+                                <div className="submission-case-line"><strong>Expected:</strong> {item.expected || 'N/A'}</div>
+                                <div className="submission-case-line"><strong>Actual:</strong> {item.actual || 'N/A'}</div>
+                                {item.error ? <div className="submission-case-line"><strong>Error:</strong> {item.error}</div> : null}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="submission-perfect-note">
+                            Passed test cases: {submissionSummary?.passCount ?? 0}. No failed cases.
+                          </div>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <div className="output-row">No submission results available; submit your solution.</div>
@@ -234,6 +282,27 @@ function ProblemLayout({ problem }) {
           </div>
         </div>
       </div>
+
+      {showSuccessCelebration && (
+        <div className="success-celebration-overlay" aria-hidden="true">
+          <div className="success-celebration-core">
+            <div className="success-celebration-ring" />
+            <div className="success-celebration-check">✓</div>
+          </div>
+          <div className="success-celebration-text">Brilliant Submission!</div>
+          <div className="success-celebration-subtext">All test cases passed.</div>
+          {Array.from({ length: 20 }).map((_, idx) => (
+            <span
+              key={idx}
+              className="success-spark"
+              style={{
+                left: `${5 + (idx * 4.5)}%`,
+                animationDelay: `${(idx % 6) * 0.12}s`
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

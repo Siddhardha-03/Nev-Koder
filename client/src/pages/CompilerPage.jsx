@@ -82,6 +82,7 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
   const [resultMeta, setResultMeta] = useState(null);
   const [running, setRunning] = useState(false);
   const [editorTheme, setEditorTheme] = useState('nevkoder-dark');
+  const [editorFontSize, setEditorFontSize] = useState(14);
   const [submissionResults, setSubmissionResults] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [runTestResult, setRunTestResult] = useState(null);
@@ -273,6 +274,14 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
     URL.revokeObjectURL(url);
   };
 
+  const increaseFontSize = () => {
+    setEditorFontSize((prev) => Math.min(prev + 1, 24));
+  };
+
+  const decreaseFontSize = () => {
+    setEditorFontSize((prev) => Math.max(prev - 1, 12));
+  };
+
   const handleBeforeMount = (monaco) => {
     monaco.editor.defineTheme('nevkoder-light', {
       base: 'vs',
@@ -317,6 +326,27 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
               >
                 {editorTheme === 'nevkoder-dark' ? 'Light' : 'Dark'} Theme
               </button>
+              <div className="compiler-font-controls" aria-label="Editor font size controls">
+                <button
+                  type="button"
+                  className="compiler-btn compiler-btn-clear"
+                  onClick={decreaseFontSize}
+                  disabled={editorFontSize <= 12}
+                  aria-label="Decrease editor font size"
+                >
+                  A-
+                </button>
+                <span className="compiler-font-size-label">{editorFontSize}px</span>
+                <button
+                  type="button"
+                  className="compiler-btn compiler-btn-clear"
+                  onClick={increaseFontSize}
+                  disabled={editorFontSize >= 24}
+                  aria-label="Increase editor font size"
+                >
+                  A+
+                </button>
+              </div>
               <button type="button" className="compiler-btn compiler-btn-clear" onClick={handleDownloadCode}>
                 <Download size={15} /> Download
               </button>
@@ -363,7 +393,7 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
             defaultValue={code}
             onChange={(value) => setCode(value || '')}
             options={{
-              fontSize: 14,
+              fontSize: editorFontSize,
               lineNumbers: 'on',
               minimap: { enabled: false },
               automaticLayout: true,

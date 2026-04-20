@@ -128,6 +128,223 @@
   word-break: break-word;
 }
 
+.submission-premium-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.submission-status-banner {
+  border-radius: 12px;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #d8e2f0;
+  background: linear-gradient(120deg, #f7f9ff 0%, #eef3ff 100%);
+}
+
+.submission-status-banner.accepted {
+  border-color: #9ad8b8;
+  background: linear-gradient(120deg, #ecfff4 0%, #def7ea 100%);
+}
+
+.submission-status-banner.failed {
+  border-color: #f4b4b4;
+  background: linear-gradient(120deg, #fff4f4 0%, #ffe9e9 100%);
+}
+
+.submission-status-title {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #1e3a63;
+}
+
+.submission-status-subtitle {
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  color: #4b5f84;
+}
+
+.submission-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.submission-stat-card {
+  border: 1px solid #d8e2f0;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.6rem 0.7rem;
+}
+
+.submission-stat-card.success {
+  border-color: #a7dfbe;
+  background: #f0fff5;
+}
+
+.submission-stat-card.failure {
+  border-color: #f2b2b2;
+  background: #fff3f3;
+}
+
+.submission-stat-label {
+  font-size: 0.72rem;
+  color: #5d7298;
+}
+
+.submission-stat-value {
+  margin-top: 0.15rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #223f69;
+}
+
+.submission-failed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.submission-case-card {
+  border: 1px solid #f1b5b5;
+  border-radius: 10px;
+  background: #fff7f7;
+  padding: 0.65rem 0.75rem;
+}
+
+.submission-case-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #9f1d1d;
+  margin-bottom: 0.35rem;
+}
+
+.submission-case-line {
+  font-size: 0.8rem;
+  color: #354c73;
+  margin-bottom: 0.2rem;
+  word-break: break-word;
+}
+
+.submission-perfect-note {
+  border: 1px solid #9ad8b8;
+  border-radius: 10px;
+  background: #effff5;
+  color: #0f6a33;
+  padding: 0.65rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+
+.success-celebration-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2400;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(37, 99, 235, 0.14) 0%, rgba(10, 20, 38, 0.45) 70%);
+  animation: celebration-fade 3.2s ease forwards;
+}
+
+.success-celebration-core {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #34d399, #10b981);
+  box-shadow: 0 18px 42px rgba(16, 185, 129, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: celebration-pop 0.62s ease-out;
+}
+
+.success-celebration-ring {
+  position: absolute;
+  inset: -10px;
+  border-radius: 999px;
+  border: 3px solid rgba(167, 243, 208, 0.9);
+  animation: celebration-ring 1.4s ease-out infinite;
+}
+
+.success-celebration-check {
+  color: #ffffff;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.success-celebration-text {
+  margin-top: 1.1rem;
+  color: #f8fffb;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-shadow: 0 8px 22px rgba(16, 185, 129, 0.45);
+}
+
+.success-celebration-subtext {
+  margin-top: 0.35rem;
+  color: #d7ffe9;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.success-spark {
+  position: absolute;
+  top: 26%;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #fde68a, #f97316);
+  opacity: 0;
+  animation: spark-drop 1.8s ease-in forwards;
+}
+
+@keyframes celebration-pop {
+  0% {
+    transform: scale(0.5) rotate(-20deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes celebration-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes spark-drop {
+  0% {
+    transform: translateY(0) scale(0.7);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(300px) scale(1.1) rotate(350deg);
+    opacity: 0;
+  }
+}
+
+@keyframes celebration-fade {
+  0% { opacity: 0; }
+  8% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 @media (max-width: 1100px) {
   .problem-layout-shell {
     flex-direction: column;
@@ -168,6 +385,14 @@
 
   .problem-right-pane {
     min-height: 350px;
+  }
+
+  .submission-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .success-celebration-text {
+    font-size: 1.2rem;
   }
 }
 
