@@ -18,6 +18,12 @@ function LearningPathPage() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState('');
 
+  const buildProblemUrl = (problemId) => {
+    const params = new URLSearchParams();
+    params.set('learningPathId', id);
+    return `/problems/${problemId}?${params.toString()}`;
+  };
+
   useEffect(() => {
     if (isDetailPage) return;
 
@@ -176,7 +182,9 @@ function LearningPathPage() {
                                         {problem.difficulty || 'General'}
                                       </span>
                                       <Link
-                                        to={`/problems/${problem.id}`}
+                                        to={buildProblemUrl(problem.id)}
+                                        target="_blank"
+                                        rel="noreferrer"
                                         className={`problems-btn ${problem.solved ? 'problems-btn-solved' : 'problems-btn-primary'}`}
                                       >
                                         {problem.solved ? 'Solved' : 'Solve'}

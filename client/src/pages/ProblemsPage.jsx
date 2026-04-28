@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { BookOpen, Edit3, Briefcase, Target, Zap, Award, TrendingUp, CheckCircle } from 'lucide-react';
 import LandingNavbar from '../components/LandingNavbar';
 import { getPublicProblems } from '../services/problemsService';
@@ -8,7 +8,6 @@ import { useSeoMeta } from '../hooks/useSeoMeta';
 import './ProblemsPage.css';
 
 function ProblemsPage() {
-  const navigate = useNavigate();
   useSeoMeta({
     title: 'Problems | NevKoder Coding Practice Platform',
     description: 'Solve programming problems on NevKoder, the coding practice platform for DSA practice, coding interview preparation, and learn coding online workflows.',
@@ -74,6 +73,10 @@ function ProblemsPage() {
     loadProblems();
     loadProgressStats();
   }, []);
+
+  const openProblemInNewTab = (problemId) => {
+    window.open(`/problems/${problemId}`, '_blank', 'noopener,noreferrer');
+  };
 
 
   return (
@@ -207,7 +210,7 @@ function ProblemsPage() {
                 <article
                   className="problems-row"
                   key={problem.id}
-                  onClick={() => navigate(`/problems/${problem.id}`)}
+                  onClick={() => openProblemInNewTab(problem.id)}
                   style={{ cursor: 'pointer' }}
                 >
                   <div className="problems-row-number">{index + 1}.</div>
@@ -239,6 +242,8 @@ function ProblemsPage() {
                   <div className="problems-row-cell problems-row-action">
                     <Link
                       to={`/problems/${problem.id}`}
+                      target="_blank"
+                      rel="noreferrer"
                       className={`problems-btn ${problem.solved ? 'problems-btn-solved' : 'problems-btn-primary'}`}
                       onClick={(e) => e.stopPropagation()}
                     >

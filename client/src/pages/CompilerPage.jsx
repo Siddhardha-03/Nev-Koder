@@ -77,6 +77,7 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
   const [language, setLanguage] = useState('python');
   const [code, setCode] = useState(getLanguageConfig('python').template);
   const [editorSessionKey, setEditorSessionKey] = useState(0);
+  const [editorStorageKey, setEditorStorageKey] = useState('');
   const [stdin, setStdin] = useState('');
   const [output, setOutput] = useState('Ready. Click Run to execute your code.');
   const [resultMeta, setResultMeta] = useState(null);
@@ -88,12 +89,40 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
   const [runTestResult, setRunTestResult] = useState(null);
   const [awaitingInput, setAwaitingInput] = useState(false);
   const stdinRef = useRef(null);
+  const saveTimeoutRef = useRef(null);
 
   const languageConfig = useMemo(() => getLanguageConfig(language), [language]);
 
+  const STORAGE_PREFIX = 'nevkoder:editor';
+  const getStorageKey = (problemObj, lang) => {
+    const langKey = lang || 'unknown';
+    if (problemObj && problemObj.id) return `${STORAGE_PREFIX}:problem:${problemObj.id}:${langKey}`;
+    return `${STORAGE_PREFIX}:global:${langKey}`;
+  };
+
   useEffect(() => {
     const scaffold = getProblemScaffold(problem, language);
-    setCode(scaffold || getLanguageConfig(language).template);
+    const key = getStorageKey(problem, language);
+    setEditorStorageKey(key);
+
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved !== null && saved !== undefined) {
+        setCode(saved);
+      } else {
+        if (problem) {
+          // For problem pages: if scaffold exists use it, otherwise keep editor plain
+          setCode(scaffold || '');
+        } else {
+          // For standalone compiler: keep the language template
+          setCode(getLanguageConfig(language).template);
+        }
+      }
+    } catch (e) {
+      if (problem) setCode(scaffold || '');
+      else setCode(getLanguageConfig(language).template);
+    }
+
     setEditorSessionKey((value) => value + 1);
   }, [language, problem]);
 
@@ -108,6 +137,12 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [code, language, stdin]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, []);
 
   const formatOutput = (result) => {
     const stdout = decodeIfNeeded(result?.stdout);
@@ -241,7 +276,16 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
   };
 
   const handleClearCode = () => {
-    setCode(languageConfig.template);
+    // If embedded in a problem, clear to scaffold (if any) or empty; otherwise reset to language template
+    if (problem) {
+      const scaffold = getProblemScaffold(problem, language);
+      setCode(scaffold || '');
+    } else {
+      setCode(languageConfig.template);
+    }
+    try {
+      if (editorStorageKey) localStorage.removeItem(editorStorageKey);
+    } catch (e) {}
     setEditorSessionKey((value) => value + 1);
   };
 
@@ -390,8 +434,20 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
             theme={editorTheme}
             beforeMount={handleBeforeMount}
             language={languageConfig.monaco}
-            defaultValue={code}
-            onChange={(value) => setCode(value || '')}
+            value={code}
+            onChange={(value) => {
+              const v = value || '';
+              setCode(v);
+              try {
+                if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+                const key = editorStorageKey;
+                saveTimeoutRef.current = setTimeout(() => {
+                  try {
+                    if (key) localStorage.setItem(key, v);
+                  } catch (e) {}
+                }, 800);
+              } catch (e) {}
+            }}
             options={{
               fontSize: editorFontSize,
               lineNumbers: 'on',

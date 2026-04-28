@@ -97,43 +97,7 @@
 .compiler-editor .monaco-container {
   min-height: 300px;
   position: relative;
-  overflow: hidden;
   width: 100%;
-}
-
-.compiler-editor .monaco-container .monaco-editor,
-.compiler-editor .monaco-container .overflow-guard,
-.compiler-editor .monaco-container .monaco-editor-background,
-.compiler-editor .monaco-container .monaco-editor .margin,
-.compiler-editor .monaco-container .monaco-editor .overflow-guard {
-  width: 100% !important;
-}
-
-.compiler-editor .monaco-container .monaco-editor .view-lines,
-.compiler-editor .monaco-container .monaco-editor .view-line,
-.compiler-editor .monaco-container .monaco-editor .inputarea,
-.compiler-editor .monaco-container .monaco-editor .lines-content {
-  max-width: 100% !important;
-}
-
-.compiler-editor .monaco-container .monaco-editor .view-line {
-  white-space: pre-wrap !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
-  max-width: 100% !important;
-}
-
-.compiler-editor .monaco-container .monaco-editor .view-line span {
-  white-space: pre-wrap !important;
-  overflow-wrap: anywhere !important;
-  word-break: break-word !important;
-}
-
-.compiler-editor .monaco-container .monaco-scrollable-element,
-.compiler-editor .monaco-container .monaco-editor .overflow-guard,
-.compiler-editor .monaco-container .monaco-editor .view-overlays,
-.compiler-editor .monaco-container .monaco-editor .inputarea.ime-input {
-  overflow-x: hidden !important;
 }
 
 .compiler-editor .compiler-btn {
