@@ -195,7 +195,7 @@ function HomePage() {
       desc: 'Test your knowledge with interactive quizzes.',
       icon: HelpCircle,
       image: quizIcon,
-      route: '/practice-sheets',
+      route: '/quizzes',
     },
   ]
 
@@ -331,7 +331,7 @@ function HomePage() {
           <div>
             <h3>Interactive Quizzes</h3>
             <p>Boost your knowledge with fun, tech quizzes.</p>
-            <Link to="/login" className="btn btn-primary">
+            <Link to="/quizzes" className="btn btn-primary">
               Take a Quiz
               <ArrowRight size={16} aria-hidden="true" />
             </Link>
@@ -366,7 +366,7 @@ function HomePage() {
             <h4>Platform</h4>
             <a href="#">Practice Problems</a>
             <a href="#">Assessments</a>
-            <a href="#">Quizzes</a>
+            <Link to="/quizzes">Quizzes</Link>
             <a href="#">Leaderboard</a>
           </div>
 

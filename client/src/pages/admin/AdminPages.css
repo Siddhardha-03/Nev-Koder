@@ -310,6 +310,18 @@
   color: #b42318;
 }
 
+.admin-badge-neutral {
+  background: #eef4ff;
+  color: #3559a6;
+}
+
+.admin-problem-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
 .admin-tags {
   display: flex;
   gap: 0.35rem;

@@ -319,7 +319,7 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
   };
 
   const increaseFontSize = () => {
-    setEditorFontSize((prev) => Math.min(prev + 1, 24));
+    setEditorFontSize((prev) => Math.min(prev + 1, 72));
   };
 
   const decreaseFontSize = () => {
@@ -385,7 +385,7 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
                   type="button"
                   className="compiler-btn compiler-btn-clear"
                   onClick={increaseFontSize}
-                  disabled={editorFontSize >= 24}
+                  disabled={editorFontSize >= 72}
                   aria-label="Increase editor font size"
                 >
                   A+

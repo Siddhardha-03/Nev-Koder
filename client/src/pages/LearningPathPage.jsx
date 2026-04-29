@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import LandingNavbar from '../components/LandingNavbar';
 import { getPublicLearningPathById, getPublicLearningPaths } from '../services/learningPathService';
 import './LearningPathPage.css';
@@ -7,6 +7,7 @@ import './ProblemsPage.css';
 
 function LearningPathPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const isDetailPage = Boolean(id);
 
   const [paths, setPaths] = useState([]);
@@ -172,7 +173,19 @@ function LearningPathPage() {
                             ) : (
                               <div className="learning-problem-list">
                                 {problems.map((problem) => (
-                                  <article className="learning-problem-row" key={problem.id}>
+                                  <article
+                                    className="learning-problem-row"
+                                    key={problem.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => navigate(buildProblemUrl(problem.id))}
+                                    onKeyDown={(event) => {
+                                      if (event.key === 'Enter' || event.key === ' ') {
+                                        event.preventDefault();
+                                        navigate(buildProblemUrl(problem.id));
+                                      }
+                                    }}
+                                  >
                                     <div className="learning-problem-main">
                                       <h4>{problem.title}</h4>
                                       <p>Practice this question from topic: {topic.title}</p>
@@ -186,6 +199,7 @@ function LearningPathPage() {
                                         target="_blank"
                                         rel="noreferrer"
                                         className={`problems-btn ${problem.solved ? 'problems-btn-solved' : 'problems-btn-primary'}`}
+                                        onClick={(event) => event.stopPropagation()}
                                       >
                                         {problem.solved ? 'Solved' : 'Solve'}
                                       </Link>

@@ -17,6 +17,8 @@ const createEmptyTopic = () => ({
   problemIds: []
 });
 
+const normalizeText = (value = '') => String(value).toLowerCase().replace(/_/g, ' ').trim();
+
 function AdminLearningPathsPage() {
   const [editingPathId, setEditingPathId] = useState(null);
   const [title, setTitle] = useState('');
@@ -37,11 +39,13 @@ function AdminLearningPathsPage() {
   const [success, setSuccess] = useState('');
 
   const filteredProblems = useMemo(() => {
-    const search = problemSearch.trim().toLowerCase();
+    const search = normalizeText(problemSearch);
 
     return allProblems.filter((problem) => {
       const byDifficulty = problemDifficulty ? problem.difficulty === problemDifficulty : true;
-      const bySearch = search ? String(problem.title || '').toLowerCase().includes(search) : true;
+      const titleText = normalizeText(problem.title);
+      const typeText = normalizeText(problem.question_type);
+      const bySearch = search ? (titleText.includes(search) || typeText.includes(search)) : true;
       return byDifficulty && bySearch;
     });
   }, [allProblems, problemDifficulty, problemSearch]);
@@ -247,7 +251,7 @@ function AdminLearningPathsPage() {
             <div className="admin-learning-toolbar">
               <input
                 className="admin-input"
-                placeholder="Search problems by title"
+                placeholder="Search problems by title or type"
                 value={problemSearch}
                 onChange={(event) => setProblemSearch(event.target.value)}
               />
@@ -309,8 +313,13 @@ function AdminLearningPathsPage() {
                               onChange={() => toggleTopicProblem(topic.key, problem.id)}
                             />
                             <span className="admin-problem-title">{problem.title}</span>
-                            <span className={`admin-badge admin-badge-${String(problem.difficulty || '').toLowerCase()}`}>
-                              {problem.difficulty}
+                            <span className="admin-problem-meta">
+                              <span className={`admin-badge admin-badge-${String(problem.difficulty || '').toLowerCase()}`}>
+                                {problem.difficulty}
+                              </span>
+                              <span className="admin-badge admin-badge-neutral">
+                                {problem.question_type || 'N/A'}
+                              </span>
                             </span>
                           </label>
                         );
