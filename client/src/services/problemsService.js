@@ -1,14 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  withCredentials: true
-});
+import api, { getAuthHeaders } from './apiClient';
 
 const formatError = (error, fallback) => ({
   success: false,
@@ -16,16 +6,11 @@ const formatError = (error, fallback) => ({
   error: error.message
 });
 
-const buildAuthHeaders = () => {
-  const token = localStorage.getItem('accessToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 export const getPublicProblems = async (filters = {}) => {
   try {
     const response = await api.get('/questions/public', {
       params: filters,
-      headers: buildAuthHeaders()
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -36,7 +21,7 @@ export const getPublicProblems = async (filters = {}) => {
 export const getPublicProblemById = async (id) => {
   try {
     const response = await api.get(`/questions/public/${id}`, {
-      headers: buildAuthHeaders()
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {

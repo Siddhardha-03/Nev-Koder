@@ -1,15 +1,7 @@
-import axios from 'axios';
-
-// Use proxied API path in production / development, falling back to localhost if not configured.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-
-const buildAuthHeaders = () => {
-  const token = localStorage.getItem('accessToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
+import api, { getAuthHeaders } from './apiClient';
 
 export const executeCode = async ({ sourceCode, language, stdin = '', questionId = null }) => {
-  const response = await axios.post(`${API_BASE_URL}/execute`, {
+  const response = await api.post('/execute', {
     sourceCode,
     language,
     stdin,
@@ -20,7 +12,7 @@ export const executeCode = async ({ sourceCode, language, stdin = '', questionId
 };
 
 export const runTestCase = async ({ sourceCode, language, questionId }) => {
-  const response = await axios.post(`${API_BASE_URL}/execute/run`, {
+  const response = await api.post('/execute/run', {
     sourceCode,
     language,
     questionId
@@ -30,15 +22,15 @@ export const runTestCase = async ({ sourceCode, language, questionId }) => {
 };
 
 export const submitSolution = async ({ sourceCode, language, questionId }) => {
-  const response = await axios.post(
-    `${API_BASE_URL}/execute/submit`,
+  const response = await api.post(
+    '/execute/submit',
     {
       sourceCode,
       language,
       questionId
     },
     {
-      headers: buildAuthHeaders()
+      headers: getAuthHeaders()
     }
   );
 

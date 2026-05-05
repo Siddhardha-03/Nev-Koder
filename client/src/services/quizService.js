@@ -1,14 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-
-const quizApi = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  withCredentials: true
-});
+import api, { getAuthHeaders } from './apiClient';
 
 const formatError = (error, fallback) => ({
   success: false,
@@ -17,16 +7,11 @@ const formatError = (error, fallback) => ({
   error: error.message
 });
 
-const buildAuthHeaders = () => {
-  const token = localStorage.getItem('accessToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 export const getPublicQuizzes = async (params = {}) => {
   try {
-    const response = await quizApi.get('/quizzes/public', {
+    const response = await api.get('/quizzes/public', {
       params,
-      headers: buildAuthHeaders()
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -36,8 +21,8 @@ export const getPublicQuizzes = async (params = {}) => {
 
 export const getPublicQuizById = async (quizId) => {
   try {
-    const response = await quizApi.get(`/quizzes/public/${quizId}`, {
-      headers: buildAuthHeaders()
+    const response = await api.get(`/quizzes/public/${quizId}`, {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -47,8 +32,8 @@ export const getPublicQuizById = async (quizId) => {
 
 export const startQuizAttempt = async (quizId) => {
   try {
-    const response = await quizApi.post(`/quizzes/${quizId}/start`, {}, {
-      headers: buildAuthHeaders()
+    const response = await api.post(`/quizzes/${quizId}/start`, {}, {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -58,8 +43,8 @@ export const startQuizAttempt = async (quizId) => {
 
 export const getQuizAttempt = async (attemptId) => {
   try {
-    const response = await quizApi.get(`/quizzes/attempts/${attemptId}`, {
-      headers: buildAuthHeaders()
+    const response = await api.get(`/quizzes/attempts/${attemptId}`, {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -69,10 +54,10 @@ export const getQuizAttempt = async (attemptId) => {
 
 export const submitQuizAttempt = async (attemptId, answers = []) => {
   try {
-    const response = await quizApi.post(
+    const response = await api.post(
       `/quizzes/attempts/${attemptId}/submit`,
       { answers },
-      { headers: buildAuthHeaders() }
+      { headers: getAuthHeaders() }
     );
     return response.data;
   } catch (error) {
@@ -82,10 +67,10 @@ export const submitQuizAttempt = async (attemptId, answers = []) => {
 
 export const recordQuizViolation = async (attemptId, violationType, details = null) => {
   try {
-    const response = await quizApi.post(
+    const response = await api.post(
       `/quizzes/attempts/${attemptId}/violation`,
       { violationType, details },
-      { headers: buildAuthHeaders() }
+      { headers: getAuthHeaders() }
     );
     return response.data;
   } catch (error) {
@@ -95,8 +80,8 @@ export const recordQuizViolation = async (attemptId, violationType, details = nu
 
 export const getQuizAttemptHistory = async () => {
   try {
-    const response = await quizApi.get('/quizzes/attempts/history', {
-      headers: buildAuthHeaders()
+    const response = await api.get('/quizzes/attempts/history', {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -106,8 +91,8 @@ export const getQuizAttemptHistory = async () => {
 
 export const getAdminQuizzes = async () => {
   try {
-    const response = await quizApi.get('/admin/quizzes', {
-      headers: buildAuthHeaders()
+    const response = await api.get('/admin/quizzes', {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -117,8 +102,8 @@ export const getAdminQuizzes = async () => {
 
 export const createAdminQuiz = async (payload) => {
   try {
-    const response = await quizApi.post('/admin/quizzes', payload, {
-      headers: buildAuthHeaders()
+    const response = await api.post('/admin/quizzes', payload, {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {

@@ -1,21 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-const adminApi = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  withCredentials: true
-});
-
-adminApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+import api, { getAuthHeaders } from './apiClient';
 
 const extractError = (error, fallbackMessage) => ({
   success: false,
@@ -25,7 +8,7 @@ const extractError = (error, fallbackMessage) => ({
 
 export const getQuestionStats = async () => {
   try {
-    const response = await adminApi.get('/questions/stats');
+    const response = await api.get('/questions/stats', { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to fetch question stats.');
@@ -34,7 +17,7 @@ export const getQuestionStats = async () => {
 
 export const getQuestions = async (filters = {}) => {
   try {
-    const response = await adminApi.get('/questions', { params: filters });
+    const response = await api.get('/questions', { params: filters, headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to fetch questions.');
@@ -43,7 +26,7 @@ export const getQuestions = async (filters = {}) => {
 
 export const getQuestionById = async (id) => {
   try {
-    const response = await adminApi.get(`/questions/${id}`);
+    const response = await api.get(`/questions/${id}`, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to fetch question.');
@@ -52,7 +35,7 @@ export const getQuestionById = async (id) => {
 
 export const createQuestion = async (payload) => {
   try {
-    const response = await adminApi.post('/questions', payload);
+    const response = await api.post('/questions', payload, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to create question.');
@@ -61,7 +44,7 @@ export const createQuestion = async (payload) => {
 
 export const updateQuestion = async (id, payload) => {
   try {
-    const response = await adminApi.put(`/questions/${id}`, payload);
+    const response = await api.put(`/questions/${id}`, payload, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to update question.');
@@ -70,7 +53,7 @@ export const updateQuestion = async (id, payload) => {
 
 export const deleteQuestion = async (id) => {
   try {
-    const response = await adminApi.delete(`/questions/${id}`);
+    const response = await api.delete(`/questions/${id}`, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to delete question.');
@@ -79,7 +62,7 @@ export const deleteQuestion = async (id) => {
 
 export const createLearningPath = async (payload) => {
   try {
-    const response = await adminApi.post('/learning-paths', payload);
+    const response = await api.post('/learning-paths', payload, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to create learning path.');
@@ -88,7 +71,7 @@ export const createLearningPath = async (payload) => {
 
 export const getAdminLearningPaths = async () => {
   try {
-    const response = await adminApi.get('/learning-paths');
+    const response = await api.get('/learning-paths', { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to fetch learning paths.');
@@ -97,7 +80,7 @@ export const getAdminLearningPaths = async () => {
 
 export const getAdminLearningPathById = async (id) => {
   try {
-    const response = await adminApi.get(`/learning-paths/${id}`);
+    const response = await api.get(`/learning-paths/${id}`, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to fetch learning path details.');
@@ -106,7 +89,7 @@ export const getAdminLearningPathById = async (id) => {
 
 export const updateLearningPath = async (id, payload) => {
   try {
-    const response = await adminApi.put(`/learning-paths/${id}`, payload);
+    const response = await api.put(`/learning-paths/${id}`, payload, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to update learning path.');
@@ -115,7 +98,7 @@ export const updateLearningPath = async (id, payload) => {
 
 export const deleteLearningPath = async (id) => {
   try {
-    const response = await adminApi.delete(`/learning-paths/${id}`);
+    const response = await api.delete(`/learning-paths/${id}`, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to delete learning path.');
@@ -127,9 +110,10 @@ export const uploadQuestionsBulkBoilerplate = async (file) => {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await adminApi.post('/questions/bulk-upload/boilerplate', formData, {
+    const response = await api.post('/questions/bulk-upload/boilerplate', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data',
+        ...getAuthHeaders()
       }
     });
     return response.data;
@@ -143,9 +127,10 @@ export const uploadQuestionsBulkNoBoilerplate = async (file) => {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await adminApi.post('/questions/bulk-upload/no-boilerplate', formData, {
+    const response = await api.post('/questions/bulk-upload/no-boilerplate', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data',
+        ...getAuthHeaders()
       }
     });
     return response.data;
@@ -156,8 +141,9 @@ export const uploadQuestionsBulkNoBoilerplate = async (file) => {
 
 export const downloadTemplateBoilerplate = async () => {
   try {
-    const response = await adminApi.get('/questions/templates/boilerplate', {
-      responseType: 'blob'
+    const response = await api.get('/questions/templates/boilerplate', {
+      responseType: 'blob',
+      headers: getAuthHeaders()
     });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
@@ -174,8 +160,9 @@ export const downloadTemplateBoilerplate = async () => {
 
 export const downloadTemplateNoBoilerplate = async () => {
   try {
-    const response = await adminApi.get('/questions/templates/no-boilerplate', {
-      responseType: 'blob'
+    const response = await api.get('/questions/templates/no-boilerplate', {
+      responseType: 'blob',
+      headers: getAuthHeaders()
     });
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
@@ -192,7 +179,7 @@ export const downloadTemplateNoBoilerplate = async () => {
 
 export const getAdminUsers = async () => {
   try {
-    const response = await adminApi.get('/admin/users');
+    const response = await api.get('/admin/users', { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to fetch users.');
@@ -201,7 +188,7 @@ export const getAdminUsers = async () => {
 
 export const createAdminUser = async (payload) => {
   try {
-    const response = await adminApi.post('/admin/users', payload);
+    const response = await api.post('/admin/users', payload, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to create user.');
@@ -210,7 +197,7 @@ export const createAdminUser = async (payload) => {
 
 export const deleteAdminUser = async (id) => {
   try {
-    const response = await adminApi.delete(`/admin/users/${id}`);
+    const response = await api.delete(`/admin/users/${id}`, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to delete user.');
@@ -219,7 +206,7 @@ export const deleteAdminUser = async (id) => {
 
 export const getAdminAssessments = async () => {
   try {
-    const response = await adminApi.get('/admin/assessments');
+    const response = await api.get('/admin/assessments', { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to fetch assessments.');
@@ -228,7 +215,7 @@ export const getAdminAssessments = async () => {
 
 export const createAdminAssessment = async (payload) => {
   try {
-    const response = await adminApi.post('/admin/assessments', payload);
+    const response = await api.post('/admin/assessments', payload, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to create assessment.');
@@ -237,7 +224,7 @@ export const createAdminAssessment = async (payload) => {
 
 export const deleteAdminAssessment = async (id) => {
   try {
-    const response = await adminApi.delete(`/admin/assessments/${id}`);
+    const response = await api.delete(`/admin/assessments/${id}`, { headers: getAuthHeaders() });
     return response.data;
   } catch (error) {
     return extractError(error, 'Failed to delete assessment.');
@@ -246,8 +233,9 @@ export const deleteAdminAssessment = async (id) => {
 
 export const exportAdminQuizResults = async (quizId) => {
   try {
-    const response = await adminApi.get(`/admin/quizzes/${quizId}/export`, {
-      responseType: 'blob'
+    const response = await api.get(`/admin/quizzes/${quizId}/export`, {
+      responseType: 'blob',
+      headers: getAuthHeaders()
     });
 
     const contentDisposition = response.headers['content-disposition'] || '';

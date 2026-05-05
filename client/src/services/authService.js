@@ -1,57 +1,4 @@
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-
-// Create axios instance with default settings
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  withCredentials: true // For cookies (refresh token)
-});
-
-// Add token to request headers
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken');
-  if (token && !config.headers.Authorization) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// Handle 401 responses (token expired)
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    const isAuthEndpoint = originalRequest?.url?.includes('/auth/forgot-password')
-      || originalRequest?.url?.includes('/auth/reset-password')
-      || originalRequest?.url?.includes('/auth/firebase/sync')
-      || originalRequest?.url?.includes('/auth/firebase/me')
-      || originalRequest?.url?.includes('/auth/refresh-token');
-
-    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
-      originalRequest._retry = true;
-
-      try {
-        const response = await api.post('/auth/refresh-token');
-        const { accessToken } = response.data;
-        localStorage.setItem('accessToken', accessToken);
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        // Refresh failed, redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
+import api, { clearAuthState } from './apiClient';
 
 const persistAuthState = (response) => {
   localStorage.setItem('accessToken', response.accessToken);
@@ -265,8 +212,7 @@ export const getDashboardStats = async () => {
  * Logout user (clear local storage)
  */
 export const logout = () => {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('user');
+  clearAuthState();
 };
 
 /**
