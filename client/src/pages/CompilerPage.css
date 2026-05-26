@@ -12,19 +12,22 @@
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
   color: #243551;
+  height: 25px;
 }
 
 .compiler-actions {
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.4rem;
+  flex-wrap: wrap;
 }
 
 .compiler-font-controls {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.25rem;
+  height: 25px;
 }
 
 .compiler-font-size-label {
@@ -33,16 +36,24 @@
   color: #1f3b66;
   min-width: 44px;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
 }
 
 .compiler-btn {
   border: 0;
-  border-radius: 10px;
-  padding: 0.55rem 0.9rem;
+  border-radius: 50px;
+  padding: 0.5rem 0.85rem;
   font-family: var(--font-heading);
   font-weight: 600;
   cursor: pointer;
-  min-height: 10px;
+  min-height: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .compiler-btn:disabled {
@@ -51,8 +62,14 @@
 }
 
 .compiler-btn-run {
-  background: linear-gradient(110deg, #b306de 0%, #cdc7cf 100%);
+  background: linear-gradient(110deg, #03c63e 0%, #04a63f 100%);
   color: #ffffff;
+}
+
+.compiler-btn-icon-only {
+  width: 38px;
+  min-width: 38px;
+  padding: 0;
 }
 
 .compiler-btn-clear {
@@ -66,7 +83,7 @@
   grid-template-columns: minmax(0, 6fr) minmax(0, 4fr);
   gap: 0rem;
   padding: 1rem;
-  min-height: calc(100vh - 150px);
+  min-height: calc(90vh - 140px);
 }
 
 .compiler-main.compiler-main-single {
@@ -87,7 +104,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.65rem 0.8rem;
+  padding: 0.40rem 0.9rem;
   border-bottom: 1px solid #dfe4ed;
   background: #f5f8fe;
   font-size: 0.9rem;
@@ -106,15 +123,33 @@
 }
 
 .compiler-editor .compiler-language-select {
-  min-width: 150px;
-  padding: 0.38rem 0.55rem;
-  font-size: 0.82rem;
+  min-width: 100px;
+  padding: 0.34rem 0.55rem;
+  font-size: 0.72rem;
+}
+
+.compiler-editor .compiler-btn,
+.compiler-editor .compiler-language-select,
+.compiler-editor .compiler-font-controls,
+.compiler-editor .compiler-font-size-label,
+.compiler-editor .compiler-btn-icon-only {
+  height: 25px;
+}
+
+.compiler-editor .compiler-btn-icon-only {
+  width: 34px;
+  min-width: 34px;
+  padding: 0;
 }
 
 .compiler-panel-header .compiler-btn-clear {
   background: #eef3ff;
   border: 1px solid #c9d6ec;
   color: #223a63;
+}
+
+.compiler-panel-header .compiler-btn-clear:hover:not(:disabled) {
+  background: #e5eeff;
 }
 
 .compiler-output-body {
@@ -624,6 +659,18 @@
     gap: 0.5rem;
   }
 
+  .compiler-actions {
+    width: 100%;
+  }
+
+  .compiler-actions > * {
+    flex: 1 1 130px;
+  }
+
+  .compiler-actions .compiler-btn-icon-only {
+    flex: 0 0 34px;
+  }
+
   .compiler-output-body {
     height: 250px;
     font-size: 0.8rem;
@@ -658,6 +705,18 @@
   .compiler-panel-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .compiler-actions {
+    width: 100%;
+  }
+
+  .compiler-actions > * {
+    flex: 1 1 100%;
+  }
+
+  .compiler-actions .compiler-btn-icon-only {
+    flex: 0 0 34px;
   }
 
   .compiler-output-body {

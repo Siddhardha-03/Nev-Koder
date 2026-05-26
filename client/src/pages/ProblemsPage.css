@@ -293,7 +293,7 @@
   box-shadow: 0 8px 24px rgba(17, 42, 86, 0.08);
   padding: 0.9rem;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr auto;
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
   gap: 0.55rem;
 }
 

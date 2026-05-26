@@ -391,8 +391,14 @@ function CompilerPage({ problem = null, onRunResult = () => {}, onSubmitResult =
                   A+
                 </button>
               </div>
-              <button type="button" className="compiler-btn compiler-btn-clear" onClick={handleDownloadCode}>
-                <Download size={15} /> Download
+              <button
+                type="button"
+                className="compiler-btn compiler-btn-clear compiler-btn-icon-only"
+                onClick={handleDownloadCode}
+                aria-label="Download code"
+                title="Download code"
+              >
+                <Download size={15} aria-hidden="true" />
               </button>
               <select
                 className="compiler-language-select"

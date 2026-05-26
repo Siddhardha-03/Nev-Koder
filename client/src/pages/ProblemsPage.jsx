@@ -35,12 +35,18 @@ function ProblemsPage() {
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [tag, setTag] = useState('');
+  const [solvedFilter, setSolvedFilter] = useState('all');
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [progressStats, setProgressStats] = useState(null);
 
-  const normalizedProblems = useMemo(() => problems || [], [problems]);
+  const filteredProblems = useMemo(() => {
+    const list = (problems || []).slice();
+    if (solvedFilter === 'solved') return list.filter((p) => p.solved);
+    if (solvedFilter === 'unsolved') return list.filter((p) => !p.solved);
+    return list;
+  }, [problems, solvedFilter]);
 
   const loadProblems = async (nextSearch = search, nextDifficulty = difficulty, nextTag = tag) => {
     setLoading(true);
@@ -181,6 +187,11 @@ function ProblemsPage() {
             value={tag}
             onChange={(event) => setTag(event.target.value)}
           />
+          <select className="problems-select" value={solvedFilter} onChange={(event) => setSolvedFilter(event.target.value)}>
+            <option value="all">All</option>
+            <option value="solved">Solved</option>
+            <option value="unsolved">Unsolved</option>
+          </select>
           <button type="button" className="problems-btn problems-btn-primary" onClick={() => loadProblems(search, difficulty, tag)}>
             Apply
           </button>
@@ -189,11 +200,11 @@ function ProblemsPage() {
         {loading ? <div className="problems-loading">Loading problems...</div> : null}
         {error ? <div className="problems-error">{error}</div> : null}
 
-        {!loading && !error && normalizedProblems.length === 0 ? (
+        {!loading && !error && filteredProblems.length === 0 ? (
           <div className="problems-empty">No problems found. Try updating search or filters.</div>
         ) : null}
 
-        {!loading && normalizedProblems.length > 0 ? (
+        {!loading && filteredProblems.length > 0 ? (
           <section className="problems-list" aria-label="Problems list">
             <div className="problems-list-head" role="row">
               <span>#</span>
@@ -203,7 +214,7 @@ function ProblemsPage() {
               <span>Tags</span>
               <span>Action</span>
             </div>
-            {normalizedProblems.map((problem, index) => {
+            {filteredProblems.map((problem, index) => {
               const tags = problem.tags?.tags || [];
 
               return (

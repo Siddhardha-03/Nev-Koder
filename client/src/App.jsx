@@ -28,6 +28,11 @@ import AdminQuizzesPage from './pages/admin/AdminQuizzesPage'
 const LOADER_MIN_DURATION_MS = 500
 const LOADER_FADE_DURATION_MS = 280
 const LOADER_MAX_WAIT_MS = 6500
+// Delay before showing the global loader. Shorter on slow networks so
+// users see progress quickly; longer on fast networks to avoid flicker.
+const SHOW_DELAY_DEFAULT_MS = 250
+const SHOW_DELAY_FAST_MS = 450
+const SHOW_DELAY_SLOW_MS = 120
 
 const wait = (duration) => new Promise((resolve) => {
   window.setTimeout(resolve, duration)
@@ -93,25 +98,54 @@ function AdminRoute({ children }) {
 function AppRouterShell() {
   const location = useLocation()
   const loadCycleRef = useRef(0)
-  const [showLoader, setShowLoader] = useState(true)
+  const [showLoader, setShowLoader] = useState(false)
   const [isFading, setIsFading] = useState(false)
 
   useLayoutEffect(() => {
     loadCycleRef.current += 1
-    setShowLoader(true)
+    // don't show the loader immediately; defer to the effect which
+    // will decide whether to reveal it after a short delay
+    setShowLoader(false)
     setIsFading(false)
   }, [location.key])
 
   useEffect(() => {
     const cycleId = loadCycleRef.current
     const startedAt = performance.now()
+    let showTimer
     let revealTimer
     let fadeTimer
+    const loaderShownAt = { current: 0 }
+
+    const getShowDelay = () => {
+      try {
+        const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+        const effective = conn?.effectiveType
+        if (effective === 'slow-2g' || effective === '2g' || effective === '3g') return SHOW_DELAY_SLOW_MS
+        if (effective === '4g') return SHOW_DELAY_FAST_MS
+      } catch (e) {
+        // ignore and fallthrough to default
+      }
+      return SHOW_DELAY_DEFAULT_MS
+    }
+
+    // schedule showing the loader after an adaptive delay
+    showTimer = window.setTimeout(() => {
+      if (cycleId !== loadCycleRef.current) return
+      setShowLoader(true)
+      loaderShownAt.current = performance.now()
+    }, getShowDelay())
 
     const reveal = () => {
       if (cycleId !== loadCycleRef.current) return
 
-      const elapsed = performance.now() - startedAt
+      // If loader was never shown (operation finished before delay), cancel showing and return
+      if (loaderShownAt.current === 0) {
+        if (showTimer) window.clearTimeout(showTimer)
+        return
+      }
+
+      const elapsed = performance.now() - loaderShownAt.current
       const remaining = Math.max(0, LOADER_MIN_DURATION_MS - elapsed)
 
       revealTimer = window.setTimeout(() => {
@@ -133,6 +167,7 @@ function AppRouterShell() {
     ]).then(reveal)
 
     return () => {
+      if (showTimer) window.clearTimeout(showTimer)
       if (revealTimer) window.clearTimeout(revealTimer)
       if (fadeTimer) window.clearTimeout(fadeTimer)
     }
