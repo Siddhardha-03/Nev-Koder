@@ -10,12 +10,14 @@ function QuizResultPage() {
   const navigate = useNavigate();
 
   const [result, setResult] = useState(location.state?.result || null);
+  const [questions, setQuestions] = useState(location.state?.questions || null);
   const [title, setTitle] = useState('Quiz Attempt');
   const [loading, setLoading] = useState(!location.state?.result);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (result) return;
+    // If we already have a result AND question details, skip loading.
+    if (result && questions) return;
 
     const load = async () => {
       setLoading(true);
@@ -27,19 +29,25 @@ function QuizResultPage() {
         return;
       }
 
-      setTitle(response.attempt?.title || 'Quiz Attempt');
-      setResult({
-        id: response.attempt.id,
-        status: response.attempt.status,
-        score: response.attempt.score,
-        total_points: response.attempt.total_points,
-        accuracy_percent: response.attempt.accuracy_percent,
-        time_spent_seconds: response.attempt.time_spent_seconds,
-        passed: response.attempt.passed,
-        tab_switch_count: response.attempt.tab_switch_count,
-        violation_count: response.attempt.violation_count,
-        submitted_at: response.attempt.submitted_at
+      const attempt = response.attempt || {};
+      setTitle(attempt.title || 'Quiz Attempt');
+
+      // Merge or set the result summary
+      setResult((prev) => prev || {
+        id: attempt.id,
+        status: attempt.status,
+        score: attempt.score,
+        total_points: attempt.total_points,
+        accuracy_percent: attempt.accuracy_percent,
+        time_spent_seconds: attempt.time_spent_seconds,
+        passed: attempt.passed,
+        tab_switch_count: attempt.tab_switch_count,
+        violation_count: attempt.violation_count,
+        submitted_at: attempt.submitted_at
       });
+
+      // Attach questions (each includes selected_option, is_correct, explanation, options)
+      setQuestions(attempt.questions || []);
     };
 
     load();
@@ -123,6 +131,67 @@ function QuizResultPage() {
             </button>
           </div>
         </section>
+        {questions && questions.length > 0 ? (
+          <section className="quiz-card quiz-result-solutions">
+            <p className="quiz-page-kicker">Solutions</p>
+            <div className="quiz-question-list">
+              {questions.map((q, idx) => (
+                <article className="quiz-card quiz-question-card" key={q.id}>
+                  <h3>Q{idx + 1}. <span className="quiz-question-text">{q.question_text}</span></h3>
+                  <div className="quiz-options-grid">
+                    {[
+                      { key: 'A', text: q.option_a },
+                      { key: 'B', text: q.option_b },
+                      { key: 'C', text: q.option_c },
+                      { key: 'D', text: q.option_d }
+                    ].map((opt) => {
+                      const isCorrect = String(opt.key) === String(q.correct_option || q.answer || '').toUpperCase();
+                      const isSelected = String(opt.key) === String(q.selected_option || '').toUpperCase();
+
+                      const baseStyle = { display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', borderRadius: 10 };
+                      const correctStyle = isCorrect ? { background: '#ecffef', border: '1px solid #bbf0c5' } : {};
+                      const wrongSelectedStyle = isSelected && !isCorrect ? { background: '#fff5f5', border: '1px solid #ffcccc' } : {};
+
+                      return (
+                        <div className="quiz-option" key={opt.key} style={{ ...baseStyle, ...correctStyle, ...wrongSelectedStyle }}>
+                          <strong style={{ minWidth: 22 }}>{opt.key}.</strong>
+                          <span style={{ color: '#142d55' }}>{opt.text}</span>
+                          {isSelected ? <span style={{ marginLeft: 'auto', fontWeight: 700 }}>{isCorrect ? 'Your answer (Correct)' : 'Your answer'}</span> : null}
+                          {isCorrect && !isSelected ? <span style={{ marginLeft: 'auto', color: '#047857', fontWeight: 700 }}>Correct Answer</span> : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {q.explanation ? <p className="quiz-question-explanation">{q.explanation}</p> : null}
+
+                  <div className="quiz-answer-row">
+                    <div className="quiz-answer-pill quiz-answer-pill-user">
+                      Your answer: {' '}
+                      {q.selected_option ? (
+                        (() => {
+                          const key = String(q.selected_option).toUpperCase();
+                          const text = key === 'A' ? q.option_a : key === 'B' ? q.option_b : key === 'C' ? q.option_c : key === 'D' ? q.option_d : '';
+                          return `${key}. ${text}`;
+                        })()
+                      ) : 'No answer'}
+                    </div>
+
+                    <div className="quiz-answer-pill quiz-answer-pill-correct">
+                      Correct answer: {' '}
+                      {q.correct_option ? (
+                        (() => {
+                          const key = String(q.correct_option).toUpperCase();
+                          const text = key === 'A' ? q.option_a : key === 'B' ? q.option_b : key === 'C' ? q.option_c : key === 'D' ? q.option_d : '';
+                          return `${key}. ${text}`;
+                        })()
+                      ) : '—'}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </main>
     </section>
   );

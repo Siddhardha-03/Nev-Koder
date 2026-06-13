@@ -186,7 +186,7 @@ function QuizAttemptPage() {
               {(attempt.questions || []).map((question, index) => (
                 <article className="quiz-card quiz-question-card" key={question.id}>
                   <h3>
-                    Q{index + 1}. {question.question_text}
+                    Q{index + 1}. <span className="quiz-question-text">{question.question_text}</span>
                   </h3>
                   <div className="quiz-options-grid">
                     {[

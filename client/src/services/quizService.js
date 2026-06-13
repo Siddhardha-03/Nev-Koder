@@ -113,8 +113,8 @@ export const createAdminQuiz = async (payload) => {
 
 export const updateAdminQuiz = async (quizId, payload) => {
   try {
-    const response = await quizApi.put(`/admin/quizzes/${quizId}`, payload, {
-      headers: buildAuthHeaders()
+    const response = await api.put(`/admin/quizzes/${quizId}`, payload, {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -124,8 +124,8 @@ export const updateAdminQuiz = async (quizId, payload) => {
 
 export const deleteAdminQuiz = async (quizId) => {
   try {
-    const response = await quizApi.delete(`/admin/quizzes/${quizId}`, {
-      headers: buildAuthHeaders()
+    const response = await api.delete(`/admin/quizzes/${quizId}`, {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -135,8 +135,8 @@ export const deleteAdminQuiz = async (quizId) => {
 
 export const getAdminQuizQuestions = async (quizId) => {
   try {
-    const response = await quizApi.get(`/admin/quizzes/${quizId}/questions`, {
-      headers: buildAuthHeaders()
+    const response = await api.get(`/admin/quizzes/${quizId}/questions`, {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -146,8 +146,8 @@ export const getAdminQuizQuestions = async (quizId) => {
 
 export const createAdminQuizQuestion = async (quizId, payload) => {
   try {
-    const response = await quizApi.post(`/admin/quizzes/${quizId}/questions`, payload, {
-      headers: buildAuthHeaders()
+    const response = await api.post(`/admin/quizzes/${quizId}/questions`, payload, {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -157,8 +157,8 @@ export const createAdminQuizQuestion = async (quizId, payload) => {
 
 export const updateAdminQuizQuestion = async (quizId, questionId, payload) => {
   try {
-    const response = await quizApi.put(`/admin/quizzes/${quizId}/questions/${questionId}`, payload, {
-      headers: buildAuthHeaders()
+    const response = await api.put(`/admin/quizzes/${quizId}/questions/${questionId}`, payload, {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -168,8 +168,8 @@ export const updateAdminQuizQuestion = async (quizId, questionId, payload) => {
 
 export const deleteAdminQuizQuestion = async (quizId, questionId) => {
   try {
-    const response = await quizApi.delete(`/admin/quizzes/${quizId}/questions/${questionId}`, {
-      headers: buildAuthHeaders()
+    const response = await api.delete(`/admin/quizzes/${quizId}/questions/${questionId}`, {
+      headers: getAuthHeaders()
     });
     return response.data;
   } catch (error) {
@@ -179,8 +179,8 @@ export const deleteAdminQuizQuestion = async (quizId, questionId) => {
 
 export const downloadAdminQuizResults = async (quizId) => {
   try {
-    const response = await quizApi.get(`/admin/quizzes/${quizId}/export`, {
-      headers: buildAuthHeaders(),
+    const response = await api.get(`/admin/quizzes/${quizId}/export`, {
+      headers: getAuthHeaders(),
       responseType: 'blob'
     });
 

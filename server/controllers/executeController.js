@@ -300,6 +300,7 @@ export const submitSolution = async (req, res, next) => {
             testCaseId: testCase.id,
             isHidden: Boolean(testCase.hidden),
             passed,
+            input: testCase.input,
             expected: testCase.expected_output,
             actual: result.stdout,
             status: result.status?.description || 'Unknown',
@@ -447,6 +448,7 @@ export const runTestCase = async (req, res, next) => {
         data: {
           testCaseId: testCase.id,
           passed,
+          input: testCase.input,
           expected: testCase.expected_output,
           actual: result.stdout,
           status: result.status?.description || 'Unknown',

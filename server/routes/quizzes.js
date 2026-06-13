@@ -513,6 +513,7 @@ router.get('/attempts/:attemptId', verifyToken, async (req, res) => {
               qq.option_b,
               qq.option_c,
               qq.option_d,
+              qq.correct_option,
               qq.explanation,
               qq.question_order,
               qq.points,

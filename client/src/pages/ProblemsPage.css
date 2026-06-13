@@ -168,10 +168,10 @@
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
+  
   height: 4px;
-  background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
-  opacity: 0.95;
+    padding: 0.8rem;
+    border-radius: 12px;
 }
 
 .progress-feature-card::after {
@@ -245,7 +245,7 @@
   align-items: center;
   justify-content: center;
   width: 48px;
-  height: 48px;
+    padding: 0.58rem;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.1));
   color: inherit;
@@ -623,16 +623,83 @@
     padding: 0.7rem;
   }
 
+  .problems-header {
+    padding: 0.85rem;
+    border-radius: 14px;
+  }
+
+  .problems-header-cards {
+    gap: 0.7rem;
+  }
+
+  .progress-block {
+    gap: 0.65rem;
+  }
+
+  .progress-stat-card,
+  .progress-feature-card,
+  .problems-toolbar,
+  .problems-list {
+    border-radius: 12px;
+  }
+
+  .progress-stat-card {
+    padding: 0.9rem;
+    gap: 0.7rem;
+  }
+
+  .progress-stat-icon,
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .progress-stat-label {
+    font-size: 0.68rem;
+  }
+
+  .progress-stat-value {
+    font-size: 1.35rem;
+  }
+
+  .progress-feature-card {
+    min-height: 148px;
+    padding: 0.85rem;
+  }
+
+  .feature-title {
+    font-size: 0.95rem;
+  }
+
+  .feature-subtitle {
+    font-size: 0.74rem;
+  }
+
   .problems-header,
   .progress-block,
   .problems-toolbar,
   .problems-list {
-    box-shadow: 0 10px 32px rgba(6, 33, 80, 0.14);
-    border-radius: 14px;
+    box-shadow: 0 10px 32px rgba(6, 33, 80, 0.12);
+  }
+
+  .problems-toolbar {
+    padding: 0.75rem;
+    gap: 0.45rem;
+  }
+
+  .problems-input,
+  .problems-select {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.86rem;
+  }
+
+  .problems-btn {
+    min-height: 38px;
+    font-size: 0.82rem;
   }
 
   .problems-row {
-    padding: 0.7rem;
+    padding: 0.62rem;
   }
 
   .problems-row-title {
@@ -642,7 +709,7 @@
   }
 
   .problems-row-title h3 {
-    font-size: 1.02rem;
+    font-size: 0.92rem;
   }
 
   .problems-row-tags {
@@ -651,12 +718,12 @@
   }
 
   .problems-tag {
-    padding: 0.08rem 0.28rem;
+    padding: 0.08rem 0.3rem;
   }
 
   .problems-row-action .problems-btn {
     padding: 0.35rem 0.65rem;
-    font-size: 0.73rem;
+    font-size: 0.7rem;
   }
 
   /* Extra compact mobile view: title + difficulty + solve button */
@@ -676,6 +743,7 @@
   .problems-badge {
     display: inline-block;
     margin-top: 0.25rem;
+    font-size: 0.62rem;
   }
 
 
